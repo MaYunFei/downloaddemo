@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
 public class ServiceHelper {
   private static final Object object = new Object();
   private volatile static boolean bound = false;
-  private int maxDownloadNumber = 5;
+  private int maxDownloadNumber = 2;
   private Context context;
   //信号量  用于绑定service
   private Semaphore semaphore;

@@ -1,14 +1,18 @@
 package io.github.mayunfei.rxdownload.utils;
 
+import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableTransformer;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.BiPredicate;
+import io.reactivex.processors.BehaviorProcessor;
+import io.reactivex.processors.FlowableProcessor;
 import java.net.ConnectException;
 import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Map;
 import org.reactivestreams.Publisher;
 import retrofit2.HttpException;
 
@@ -75,5 +79,16 @@ public class RxUtils {
     } else {
       return false;
     }
+  }
+
+  public static FlowableProcessor<DownloadEvent> createProcessor(String key,
+      Map<String, FlowableProcessor<DownloadEvent>> processorMap) {
+
+    if (processorMap.get(key) == null) {
+      FlowableProcessor<DownloadEvent> processor =
+          BehaviorProcessor.<DownloadEvent>create().toSerialized();
+      processorMap.put(key, processor);
+    }
+    return processorMap.get(key);
   }
 }

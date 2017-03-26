@@ -22,6 +22,7 @@ import io.reactivex.functions.Predicate;
 import io.reactivex.processors.BehaviorProcessor;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.processors.PublishProcessor;
+import io.reactivex.schedulers.Schedulers;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import retrofit2.Response;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
+import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
 
 /**
  * 真正下载在这里
@@ -57,6 +59,9 @@ public class DownloadTask {
 
   public DownloadTask(DownloadBundle downloadBundle) {
     this.downloadBundle = downloadBundle;
+  }
+  public void init(DownloadApi downloadApi){
+    this.mDownloadApi = downloadApi;
   }
 
   /**
@@ -213,7 +218,7 @@ public class DownloadTask {
               throws Exception {
             return download(downloadBean);
           }
-        })
+        }).subscribeOn(Schedulers.io())
         .doFinally(new Action() {
           @Override public void run() throws Exception {
             if (completeSize.get() == downloadBundle.getTotalSize()) {
@@ -228,14 +233,16 @@ public class DownloadTask {
         })
         .subscribe(new Consumer<DownloadEvent>() {
           @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-
+            L.i("downloading ....");
           }
         }, new Consumer<Throwable>() {
           @Override public void accept(@NonNull Throwable throwable) throws Exception {
+            L.e("error " + throwable);
             failSize.incrementAndGet();
           }
         }, new Action() {
           @Override public void run() throws Exception {
+            L.i("finished");
             long completed = completeSize.incrementAndGet();
             event.setCompletedSize(completed);
             event.setStatus(DOWNLOADING);
@@ -267,14 +274,5 @@ public class DownloadTask {
     processorEvent = createProcessor(downloadBundle.getKey(), processorMap);
   }
 
-  private FlowableProcessor<DownloadEvent> createProcessor(String key,
-      Map<String, FlowableProcessor<DownloadEvent>> processorMap) {
 
-    if (processorMap.get(key) == null) {
-      FlowableProcessor<DownloadEvent> processor =
-          BehaviorProcessor.<DownloadEvent>create().toSerialized();
-      processorMap.put(key, processor);
-    }
-    return processorMap.get(key);
-  }
 }

@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
+import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
+
 public class DownloadService extends Service {
   public static final String INTENT_KEY = "io.github.mayunfei.rxdownload.max_download_number";
   private DownloadBinder mBinder;
@@ -98,6 +100,16 @@ public class DownloadService extends Service {
     //初始化
     downloadTask.init(taskMap, processorMap);
     downloadQueue.put(downloadTask);
+  }
+
+  public FlowableProcessor<DownloadEvent> getDownloadEvent(String key) {
+    FlowableProcessor<DownloadEvent> processor = createProcessor(key, processorMap);
+    DownloadTask task = taskMap.get(key);
+    if (task == null) {
+      //判断是否有数据库 是否有文件
+    }
+
+    return processor;
   }
 
   @Override public void onDestroy() {

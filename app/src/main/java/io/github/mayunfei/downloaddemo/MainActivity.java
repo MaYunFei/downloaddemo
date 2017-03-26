@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     bean0.setPath(Environment.getExternalStorageDirectory().getAbsolutePath()
         + File.separator
         + "rxdownload");
+    File file = new File(bean0.getPath());
+    file.mkdirs();
     bean0.setFileName("yunfei.apk");
     beanlist.add(bean0);
     downloadBundle.setDownloadList(beanlist);
