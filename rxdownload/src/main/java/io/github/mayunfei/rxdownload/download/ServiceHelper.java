@@ -5,9 +5,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import java.util.concurrent.Semaphore;
 
@@ -29,6 +33,14 @@ public class ServiceHelper {
   public ServiceHelper(Context context) {
     this.context = context.getApplicationContext();
     semaphore = new Semaphore(1);
+  }
+
+  public Observable<?> addTask(final DownloadTask task) {
+    return createGeneralObservable(new GeneralObservableCallback() {
+      @Override public void call() throws Exception {
+        downloadService.addTask(task);
+      }
+    });
   }
 
   public Observable<?> createGeneralObservable(final GeneralObservableCallback callback) {
@@ -57,7 +69,7 @@ public class ServiceHelper {
   private void doCall(GeneralObservableCallback callback, ObservableEmitter<Object> emitter) {
     if (callback != null) {
       try {
-        callback.call(downloadService);
+        callback.call();
       } catch (Exception e) {
         emitter.onError(e);
       }
@@ -91,8 +103,16 @@ public class ServiceHelper {
     }, Context.BIND_AUTO_CREATE);
   }
 
+  public Observable<DownloadEvent> getDownloadEvent(final String key) {
+    return createGeneralObservable(null).flatMap(new Function<Object, ObservableSource<DownloadEvent>>() {
+      @Override public ObservableSource<DownloadEvent> apply(@NonNull Object o) throws Exception {
+        return downloadService.getDownloadEvent(key).toObservable();
+      }
+    });
+  }
+
   public interface GeneralObservableCallback {
-    void call(DownloadService downloadService) throws Exception;
+    void call() throws Exception;
   }
 
   private interface ServiceConnectedCallback {

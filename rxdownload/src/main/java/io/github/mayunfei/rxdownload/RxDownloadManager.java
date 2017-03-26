@@ -7,7 +7,6 @@ import io.github.mayunfei.rxdownload.download.DownloadTask;
 import io.github.mayunfei.rxdownload.download.ServiceHelper;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
-import java.util.concurrent.Semaphore;
 import retrofit2.Retrofit;
 
 /**
@@ -17,38 +16,18 @@ import retrofit2.Retrofit;
 public class RxDownloadManager {
   private ServiceHelper serviceHelper;
   private DownloadApi downloadApi;
-  //Service
-  private static final Object object = new Object();
-  private volatile static boolean bound = false;
-  private int maxDownloadNumber = 2;
-  private Context context;
-  //信号量  用于绑定service
-  private Semaphore semaphore;
-
-  private DownloadService downloadService;
-
-
 
   public void init(Context context, Retrofit retrofit) {
     serviceHelper = new ServiceHelper(context);
     downloadApi = retrofit.create(DownloadApi.class);
-    this.context = context.getApplicationContext();
   }
 
   public Observable<?> addDownladTask(final DownloadTask downloadTask) {
-    return serviceHelper.createGeneralObservable(new ServiceHelper.GeneralObservableCallback() {
-      @Override public void call(DownloadService downloadService) throws Exception {
-        downloadTask.init(downloadApi);
-        downloadService.addTask(downloadTask);
-      }
-    });
+    downloadTask.init(downloadApi);
+    return serviceHelper.addTask(downloadTask);
   }
 
-  //public Observable<DownloadEvent> getDownloadEvent(String key){
-  //  return serviceHelper.createGeneralObservable(new ServiceHelper.GeneralObservableCallback() {
-  //    @Override public void call(DownloadService downloadService) throws Exception {
-  //
-  //    }
-  //  })
-  //}
+  public Observable<DownloadEvent> getDownloadEvent(String key){
+    return serviceHelper.getDownloadEvent(key);
+  }
 }
