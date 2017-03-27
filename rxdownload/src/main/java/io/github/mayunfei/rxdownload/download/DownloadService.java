@@ -6,15 +6,23 @@ import android.os.Binder;
 import android.os.IBinder;
 import io.github.mayunfei.rxdownload.db.DownloadDao;
 import io.github.mayunfei.rxdownload.db.IDownloadDB;
+import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.github.mayunfei.rxdownload.utils.L;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.schedulers.Schedulers;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +60,7 @@ public class DownloadService extends Service {
     L.i("onStartCommand Service");
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(1);
+      semaphore = new Semaphore(2);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -120,5 +128,13 @@ public class DownloadService extends Service {
   @Override public void onDestroy() {
     mDownloadDB.closeDataBase();
     super.onDestroy();
+  }
+
+  public Observable<List<DownloadBundle>> getAllDownloadBundle() {
+    return Observable.just(1).map(new Function<Integer, List<DownloadBundle>>() {
+      @Override public List<DownloadBundle> apply(@NonNull Integer integer) throws Exception {
+        return mDownloadDB.getAllDownloadBundle();
+      }
+    });
   }
 }

@@ -68,4 +68,9 @@ public class RxDownloadManager {
   public Observable<?> pause(String key) {
     return serviceHelper.pause(key);
   }
+
+  public Observable<List<DownloadBundle>> getAllDownloadBundle(){
+    return serviceHelper.getAllDownloadBundle();
+  }
+
 }

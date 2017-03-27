@@ -4,6 +4,7 @@ import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
+import java.util.List;
 
 /**
  * 数据库接口
@@ -32,4 +33,6 @@ public interface IDownloadDB {
    * 查询 下载状态
    */
   DownloadEvent selectBundleStatus(String key);
+
+  List<DownloadBundle> getAllDownloadBundle();
 }

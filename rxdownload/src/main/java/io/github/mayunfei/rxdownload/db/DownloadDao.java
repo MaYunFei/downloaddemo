@@ -10,6 +10,8 @@ import io.github.mayunfei.rxdownload.utils.L;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by mayunfei on 17-3-23.
@@ -64,6 +66,38 @@ public class DownloadDao implements IDownloadDB {
     return downloadEvent;
   }
 
+  @Override public List<DownloadBundle> getAllDownloadBundle() {
+    Cursor cursor =
+        getReadableDatabase().rawQuery("SELECT * FROM" + DownloadBundle.TABLE_NAME, null);
+    ArrayList<DownloadBundle> list = new ArrayList<>(cursor.getCount());
+    try {
+      while (cursor.moveToNext()) {
+        DownloadBundle downloadBundle = DownloadBundle.getDownloadBundle(cursor);
+        downloadBundle.setDownloadList(getDownloadBeans(downloadBundle.getId()));
+        list.add(downloadBundle);
+      }
+    } finally {
+      cursor.close();
+    }
+    return list;
+  }
+
+  private List<DownloadBean> getDownloadBeans(int bundleId) {
+
+    Cursor cursor = getReadableDatabase().rawQuery(
+        "SELECT * FROM" + DownloadBean.TABLE_NAME + " WHERE " + DownloadBean.BUNDLE_ID + " = ?",
+        new String[] { bundleId + "" });
+    ArrayList<DownloadBean> list = new ArrayList<>(cursor.getCount());
+    try {
+      while (cursor.moveToNext()) {
+        list.add(DownloadBean.getDownloadBean(cursor));
+      }
+    } finally {
+      cursor.close();
+    }
+    return list;
+  }
+
   private SQLiteDatabase getWritableDatabase() {
     SQLiteDatabase db = writableDatabase;
     if (db == null) {
@@ -99,7 +133,7 @@ public class DownloadDao implements IDownloadDB {
   }
 
   @Override public boolean updateDownloadBundle(DownloadBundle downloadBundle) {
-    //L.i(TAG, "updateDownloadBundle \n" + downloadBundle);
+    L.i(TAG, "updateDownloadBundle \n" + downloadBundle);
     getWritableDatabase().update(DownloadBundle.TABLE_NAME, DownloadBundle.update(downloadBundle),
         DownloadBundle.KEY + "=?", new String[] { downloadBundle.getKey() });
 
@@ -120,7 +154,7 @@ public class DownloadDao implements IDownloadDB {
       if (bundleId == -1) {
         return false;
       }
-
+      downloadBundle.setId(bundleId);
       for (DownloadBean bean : downloadBundle.getDownloadList()) {
         bean.setBundleId(bundleId);
         db.insert(DownloadBean.TABLE_NAME, null, DownloadBean.insert(bean));

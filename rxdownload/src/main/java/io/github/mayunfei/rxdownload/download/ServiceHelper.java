@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -13,6 +14,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -104,11 +106,13 @@ public class ServiceHelper {
   }
 
   public Observable<DownloadEvent> getDownloadEvent(final String key) {
-    return createGeneralObservable(null).flatMap(new Function<Object, ObservableSource<DownloadEvent>>() {
-      @Override public ObservableSource<DownloadEvent> apply(@NonNull Object o) throws Exception {
-        return downloadService.getDownloadEvent(key).toObservable();
-      }
-    });
+    return createGeneralObservable(null).flatMap(
+        new Function<Object, ObservableSource<DownloadEvent>>() {
+          @Override public ObservableSource<DownloadEvent> apply(@NonNull Object o)
+              throws Exception {
+            return downloadService.getDownloadEvent(key).toObservable();
+          }
+        });
   }
 
   public Observable<?> pause(final String key) {
@@ -117,6 +121,16 @@ public class ServiceHelper {
         downloadService.pause(key);
       }
     });
+  }
+
+  public Observable<List<DownloadBundle>> getAllDownloadBundle() {
+    return createGeneralObservable(null).flatMap(
+        new Function<Object, ObservableSource<List<DownloadBundle>>>() {
+          @Override public ObservableSource<List<DownloadBundle>> apply(@NonNull Object o)
+              throws Exception {
+            return downloadService.getAllDownloadBundle();
+          }
+        });
   }
 
   public interface GeneralObservableCallback {

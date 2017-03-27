@@ -13,6 +13,7 @@ import io.github.mayunfei.rxdownload.download.DownloadTask;
 import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
+import io.github.mayunfei.rxdownload.utils.L;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import java.io.File;
@@ -38,9 +39,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
     rxDownloadManager.getDownloadEvent("yunfei").subscribe(new Consumer<DownloadEvent>() {
       @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-        Log.i("******event******", downloadEvent.toString());
+        Log.i("******event******yunfei", downloadEvent.toString());
       }
     });
+    rxDownloadManager.getDownloadEvent(
+        "http://img.wdjimg.com/mms/icon/v1/8/10/1b26d9f0a258255b0431c03a21c0d108_512_512.png")
+        .subscribe(new Consumer<DownloadEvent>() {
+          @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+            Log.i("****event*youkuweb.apk", downloadEvent.toString());
+          }
+        });
   }
 
   @Override public void onClick(View v) {
@@ -60,6 +68,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
       }
     });
+    rxDownloadManager.pause("http://img.wdjimg.com/mms/icon/v1/8/10/1b26d9f0a258255b0431c03a21c0d108_512_512.png")
+        .subscribe(new Consumer<Object>() {
+          @Override public void accept(@NonNull Object o) throws Exception {
+
+          }
+        });
   }
 
   private void download() {
@@ -103,11 +117,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     downloadBundle.setDownloadList(beanlist);
     downloadBundle.setTotalSize(beanlist.size());
     downloadBundle.setKey("yunfei");
+    rxDownloadManager.addDownloadTask(
+        "http://img.wdjimg.com/mms/icon/v1/8/10/1b26d9f0a258255b0431c03a21c0d108_512_512.png")
+        .subscribe(new Consumer<Object>() {
+          @Override public void accept(@NonNull Object o) throws Exception {
+
+          }
+        }, new Consumer<Throwable>() {
+          @Override public void accept(@NonNull Throwable throwable) throws Exception {
+            L.e(throwable);
+          }
+        });
 
     rxDownloadManager.addDownloadTask(new DownloadTask(downloadBundle))
         .subscribe(new Consumer<Object>() {
           @Override public void accept(@NonNull Object o) throws Exception {
 
+          }
+        }, new Consumer<Throwable>() {
+          @Override public void accept(@NonNull Throwable throwable) throws Exception {
+            L.e(throwable);
           }
         });
   }

@@ -84,9 +84,15 @@ public class DownloadTask {
    */
   public void startDownload(final Semaphore semaphore) throws InterruptedException {
     //控制信号量
+    event = new DownloadEvent();
+    event.setCompletedSize(downloadBundle.getCompletedSize());
+    event.setTotalSize(downloadBundle.getTotalSize());
     List<DownloadBean> downloadList = getUnFinished(downloadBundle.getDownloadList());
     if (downloadList.size() == 0) {
       //已经下载完毕 直接结束
+      event.setStatus(FINISH);
+      processorEvent.onNext(event);
+      return;
     }
     //TODO 判断是否正确
     int unDownloadSize = downloadList.size();
@@ -94,12 +100,9 @@ public class DownloadTask {
     completeSize = new AtomicLong(downloadBundle.getCompletedSize());
     failSize = new AtomicLong(0);
 
-    event = new DownloadEvent();
-    event.setCompletedSize(downloadBundle.getCompletedSize());
-    event.setTotalSize(downloadBundle.getTotalSize());
     event.setStatus(DOWNLOADING);
     processorEvent.onNext(event);
-    if (isCancel){
+    if (isCancel) {
       return;
     }
 
@@ -198,7 +201,7 @@ public class DownloadTask {
         taskMap.put(this.downloadBundle.getKey(), this);
       } else {
         //已经存在
-        throw new IllegalArgumentException("已经存在了  "+downloadBundle.getKey());
+        throw new IllegalArgumentException("已经存在了  " + downloadBundle.getKey());
       }
     }
     processorEvent = createProcessor(downloadBundle.getKey(), processorMap);

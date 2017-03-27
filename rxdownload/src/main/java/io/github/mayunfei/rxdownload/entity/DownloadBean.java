@@ -1,6 +1,9 @@
 package io.github.mayunfei.rxdownload.entity;
 
 import android.content.ContentValues;
+import android.database.Cursor;
+import io.github.mayunfei.rxdownload.db.DBHelper;
+import retrofit2.Retrofit;
 
 /**
  * Created by yunfei on 17-3-25.
@@ -46,6 +49,7 @@ public class DownloadBean {
   }
 
   private DownloadBean(Builder builder) {
+    setId(builder.id);
     setFileName(builder.fileName);
     setPath(builder.path);
     setTotalSize(builder.totalSize);
@@ -68,6 +72,22 @@ public class DownloadBean {
     ContentValues insert = insert(downloadBean);
     insert.put(ID, downloadBean.getId());
     return insert;
+  }
+
+  public static DownloadBean getDownloadBean(Cursor cursor) {
+    int bundleId = DBHelper.getInt(cursor, BUNDLE_ID);
+    String fileName = DBHelper.getString(cursor, FILENAME);
+    String path = DBHelper.getString(cursor, PATH);
+    long totalSize = DBHelper.getLong(cursor, TOTAL_SIZE);
+    long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
+    String url = DBHelper.getString(cursor, URL);
+    return newBuilder().id(bundleId)
+        .fileName(fileName)
+        .path(path)
+        .totalSize(totalSize)
+        .completedSize(completedSize)
+        .url(url)
+        .build();
   }
 
   private int id;
@@ -161,6 +181,7 @@ public class DownloadBean {
   }
 
   public static final class Builder {
+    private int id;
     private String fileName;
     private String path;
     private long totalSize = -1;
@@ -168,6 +189,11 @@ public class DownloadBean {
     private String url;
 
     private Builder() {
+    }
+
+    public Builder id(int val) {
+      id = val;
+      return this;
     }
 
     public Builder fileName(String val) {

@@ -1,6 +1,9 @@
 package io.github.mayunfei.rxdownload.entity;
 
 import android.content.ContentValues;
+import android.database.Cursor;
+import io.github.mayunfei.rxdownload.db.DBHelper;
+import java.security.Key;
 import java.util.List;
 
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
@@ -48,6 +51,23 @@ public class DownloadBundle {
     contentValues.put(STATUS, downloadBundle.getStatus());
     contentValues.put(TYPE, downloadBundle.getType());
     return contentValues;
+  }
+
+  public static DownloadBundle getDownloadBundle(Cursor cursor) {
+    int id = DBHelper.getInt(cursor, ID);
+    String key = DBHelper.getString(cursor, KEY);
+    long totalSize = DBHelper.getLong(cursor, TOTAL_SIZE);
+    long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
+    int status = DBHelper.getInt(cursor, STATUS);
+    int type = DBHelper.getInt(cursor, TYPE);
+    DownloadBundle downloadBundle = new DownloadBundle();
+    downloadBundle.setId(id);
+    downloadBundle.setKey(key);
+    downloadBundle.setTotalSize(totalSize);
+    downloadBundle.setCompletedSize(completedSize);
+    downloadBundle.setStatus(status);
+    downloadBundle.setType(type);
+    return downloadBundle;
   }
 
   public static ContentValues update(DownloadBundle downloadBundle) {
@@ -140,6 +160,9 @@ public class DownloadBundle {
     }
 
     return "DownloadBundle{"
+        + "id = "
+        + id
+        + " "
         + key
         + '\''
         + ", totalSize="
@@ -154,6 +177,7 @@ public class DownloadBundle {
   }
 
   public void init(DownloadBundle oldBundle) {
+    this.setId(oldBundle.getId());
     this.setDownloadList(oldBundle.getDownloadList());
     this.setTotalSize(oldBundle.getTotalSize());
     this.setCompletedSize(oldBundle.getCompletedSize());
