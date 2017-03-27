@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
+import io.github.mayunfei.rxdownload.entity.DownloadEvent;
+import io.github.mayunfei.rxdownload.utils.L;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -14,6 +16,7 @@ import io.reactivex.ObservableOnSubscribe;
  */
 
 public class DownloadDao implements IDownloadDB {
+  private static final String TAG = "SQL$$$$$$$$$$$$$$$$$$";
 
   private volatile static DownloadDao singleton;
   private SQLiteHelper sqLiteHelper;
@@ -36,13 +39,29 @@ public class DownloadDao implements IDownloadDB {
     return singleton;
   }
 
-  @Override
-  public void closeDataBase() {
+  @Override public void closeDataBase() {
     synchronized (databaseLock) {
       readableDatabase = null;
       writableDatabase = null;
       sqLiteHelper.close();
     }
+  }
+
+  @Override public DownloadEvent selectBundleStatus(String key) {
+    DownloadEvent downloadEvent = new DownloadEvent();
+    Cursor cursor = getReadableDatabase().query(DownloadBundle.TABLE_NAME,
+        new String[] { DownloadBundle.TOTAL_SIZE, DownloadBundle.COMPLETED_SIZE },
+        DownloadBundle.KEY + "=?", new String[] { key }, null, null, null);
+
+    cursor.moveToFirst();
+    if (cursor.getCount() != 0) {
+      long total = DBHelper.getLong(cursor, DownloadBundle.TOTAL_SIZE);
+      long complete = DBHelper.getLong(cursor, DownloadBundle.COMPLETED_SIZE);
+      downloadEvent.setTotalSize(total);
+      downloadEvent.setCompletedSize(complete);
+    }
+
+    return downloadEvent;
   }
 
   private SQLiteDatabase getWritableDatabase() {
@@ -71,44 +90,48 @@ public class DownloadDao implements IDownloadDB {
     return db;
   }
 
-  @Override public Observable<Boolean> updateDownloadBean(DownloadBean bean) {
-    return null;
+  @Override public boolean updateDownloadBean(DownloadBean bean) {
+    //L.i(TAG, "updateDownloadBean \n" + bean);
+    getWritableDatabase().update(DownloadBean.TABLE_NAME, DownloadBean.update(bean),
+        DownloadBean.URL + "=?", new String[] { bean.getUrl() });
+
+    return true;
   }
 
-  @Override public Observable<Boolean> updateDownloadBundle(DownloadBundle downloadBundle) {
-    return null;
+  @Override public boolean updateDownloadBundle(DownloadBundle downloadBundle) {
+    //L.i(TAG, "updateDownloadBundle \n" + downloadBundle);
+    getWritableDatabase().update(DownloadBundle.TABLE_NAME, DownloadBundle.update(downloadBundle),
+        DownloadBundle.KEY + "=?", new String[] { downloadBundle.getKey() });
+
+    return true;
   }
 
-  @Override public Observable<Boolean> insertDownloadBundle(final DownloadBundle downloadBundle) {
-    return Observable.create(new ObservableOnSubscribe<Boolean>() {
-      @Override public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
-        SQLiteDatabase db = getWritableDatabase();
-        try {
-          db.beginTransaction();
-          long insert =
-              db.insert(DownloadBundle.TABLE_NAME, null, DownloadBundle.insert(downloadBundle));
-          if (insert <= 0) {
-            emitter.onNext(false);
-          }
-          int bundleId = getLastInsertRowId(db, DownloadBundle.TABLE_NAME);
-          if (bundleId == -1) {
-            emitter.onNext(false);
-          }
-
-          for (DownloadBean bean : downloadBundle.getDownloadList()) {
-            bean.setBundleId(bundleId);
-            db.insert(DownloadBean.TABLE_NAME, null, DownloadBean.insert(bean));
-            int beanId = getLastInsertRowId(db, DownloadBean.TABLE_NAME);
-            bean.setId(beanId);
-          }
-          db.setTransactionSuccessful();
-          emitter.onNext(true);
-        } finally {
-          db.endTransaction();
-          emitter.onComplete();
-        }
+  @Override public boolean insertDownloadBundle(final DownloadBundle downloadBundle) {
+    L.i(TAG, "insertDownloadBundle");
+    SQLiteDatabase db = getWritableDatabase();
+    try {
+      db.beginTransaction();
+      long insert =
+          db.insert(DownloadBundle.TABLE_NAME, null, DownloadBundle.insert(downloadBundle));
+      if (insert <= 0) {
+        return false;
       }
-    });
+      int bundleId = getLastInsertRowId(db, DownloadBundle.TABLE_NAME);
+      if (bundleId == -1) {
+        return false;
+      }
+
+      for (DownloadBean bean : downloadBundle.getDownloadList()) {
+        bean.setBundleId(bundleId);
+        db.insert(DownloadBean.TABLE_NAME, null, DownloadBean.insert(bean));
+        int beanId = getLastInsertRowId(db, DownloadBean.TABLE_NAME);
+        bean.setId(beanId);
+      }
+      db.setTransactionSuccessful();
+      return true;
+    } finally {
+      db.endTransaction();
+    }
   }
 
   private int getLastInsertRowId(SQLiteDatabase db, String tableName) {
@@ -124,5 +147,20 @@ public class DownloadDao implements IDownloadDB {
       }
     }
     return -1;
+  }
+
+  @Override public boolean existsDownloadBundle(String key) {
+    Cursor cursor = null;
+    try {
+      cursor =
+          getReadableDatabase().query(DownloadBundle.TABLE_NAME, new String[] { DownloadBundle.ID },
+              DownloadBundle.KEY + "=?", new String[] { key }, null, null, null);
+      cursor.moveToFirst();
+      return cursor.getCount() != 0;
+    } finally {
+      if (cursor != null) {
+        cursor.close();
+      }
+    }
   }
 }

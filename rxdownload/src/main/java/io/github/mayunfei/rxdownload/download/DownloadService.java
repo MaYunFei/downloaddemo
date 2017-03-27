@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.annotation.IntDef;
 import io.github.mayunfei.rxdownload.db.DownloadDao;
 import io.github.mayunfei.rxdownload.db.IDownloadDB;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
@@ -16,7 +15,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.processors.FlowableProcessor;
 import io.reactivex.schedulers.Schedulers;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +31,7 @@ public class DownloadService extends Service {
   private Map<String, DownloadTask> taskMap;
   private Map<String, FlowableProcessor<DownloadEvent>> processorMap;
 
-  private IDownloadDB mDao;
+  private IDownloadDB mDownloadDB;
   //控制线程的信号量
   private Semaphore semaphore;
   private Disposable disposable;
@@ -47,7 +45,7 @@ public class DownloadService extends Service {
     downloadQueue = new LinkedBlockingQueue<>();
     taskMap = new ConcurrentHashMap<>();
     processorMap = new ConcurrentHashMap<>();
-    mDao = DownloadDao.getSingleton(this);
+    mDownloadDB = DownloadDao.getSingleton(this);
   }
 
   @Override public int onStartCommand(Intent intent, int flags, int startId) {
@@ -55,7 +53,7 @@ public class DownloadService extends Service {
     L.i("onStartCommand Service");
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(maxDownloadNumber);
+      semaphore = new Semaphore(5);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -98,8 +96,17 @@ public class DownloadService extends Service {
 
   public void addTask(DownloadTask downloadTask) throws InterruptedException {
     //初始化
-    downloadTask.init(taskMap, processorMap);
+    downloadTask.init(taskMap, processorMap, mDownloadDB);
+    downloadTask.insertOrUpdate();
     downloadQueue.put(downloadTask);
+  }
+
+  public void pause(String key) {
+    DownloadTask downloadTask = taskMap.get(key);
+    //if (downloadTask!=null){
+    //  downloadTask.pause();
+    //}
+
   }
 
   public FlowableProcessor<DownloadEvent> getDownloadEvent(String key) {
@@ -113,7 +120,7 @@ public class DownloadService extends Service {
   }
 
   @Override public void onDestroy() {
-    mDao.closeDataBase();
+    mDownloadDB.closeDataBase();
     super.onDestroy();
   }
 }

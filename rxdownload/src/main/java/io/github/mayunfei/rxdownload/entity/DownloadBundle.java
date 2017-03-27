@@ -3,6 +3,12 @@ package io.github.mayunfei.rxdownload.entity;
 import android.content.ContentValues;
 import java.util.List;
 
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.QUEUE;
+
 /**
  * Created by yunfei on 17-3-25.
  */
@@ -16,7 +22,7 @@ public class DownloadBundle {
   public static final String STATUS = "status";
   public static final String TYPE = "type";
 
-  public static final String CREAT_TABLE = "CREATE TABLE "
+  public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
       + " ("
       + ID
@@ -111,5 +117,38 @@ public class DownloadBundle {
 
   public void setDownloadList(List<DownloadBean> downloadList) {
     this.downloadList = downloadList;
+  }
+
+  @Override public String toString() {
+    String showStatus = "";
+    switch (status) {
+      case DOWNLOADING:
+        showStatus = "下载中";
+        break;
+      case PAUSE:
+        showStatus = "暂停";
+        break;
+      case QUEUE:
+        showStatus = "等待中";
+        break;
+      case FINISH:
+        showStatus = "完成";
+        break;
+      case ERROR:
+        showStatus = "错误";
+    }
+
+    return "DownloadBundle{"
+        + key
+        + '\''
+        + ", totalSize="
+        + totalSize
+        + ", completedSize="
+        + completedSize
+        + ", status="
+        + showStatus
+        + ", type="
+        + type
+        + '}';
   }
 }

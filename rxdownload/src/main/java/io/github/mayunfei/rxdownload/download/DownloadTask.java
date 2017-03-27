@@ -13,6 +13,7 @@ import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
@@ -42,7 +43,9 @@ import retrofit2.Response;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
 import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
+import static io.github.mayunfei.rxdownload.utils.RxUtils.retry;
 
 /**
  * 真正下载在这里
@@ -50,18 +53,26 @@ import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
  */
 
 public class DownloadTask {
-  private static final long DOWNLOAD_CHUNK_SIZE = 2048;
+
   private DownloadApi mDownloadApi;
   private IDownloadDB downloadDB;
-  private boolean isCancle = false;
-  private Disposable disposable;
+  private boolean isCancel = false;
+
   private DownloadBundle downloadBundle;
+  private List<ItemTask> itemTasks;
+  private DownloadEvent event;
+  private AtomicLong completeSize;
+  private AtomicLong failSize;
+  private TaskObserver taskObserver;
 
   public DownloadTask(DownloadBundle downloadBundle) {
     this.downloadBundle = downloadBundle;
   }
-  public void init(DownloadApi downloadApi){
+
+  public void init(DownloadApi downloadApi) {
     this.mDownloadApi = downloadApi;
+    itemTasks = new ArrayList<>();
+    taskObserver = new TaskObserver();
   }
 
   /**
@@ -70,185 +81,97 @@ public class DownloadTask {
   private FlowableProcessor<DownloadEvent> processorEvent;
 
   /**
-   * 单一任务下载
-   */
-  private Flowable<DownloadEvent> download(final DownloadBean downloadBean) {
-    return mDownloadApi.download(downloadBean.getUrl())
-        .flatMap(new Function<Response<ResponseBody>, Publisher<DownloadEvent>>() {
-          @Override public Publisher<DownloadEvent> apply(@NonNull Response<ResponseBody> response)
-              throws Exception {
-            return save(downloadBean, response);
-          }
-        });
-  }
-
-  public Observable<DownloadEvent> startDownload(DownloadBundle downloadBundle) {
-
-    final DownloadBean downloadBean = downloadBundle.getDownloadList().get(0);
-    //download();
-    Flowable.just(1).doOnSubscribe(new Consumer<Subscription>() {
-      @Override public void accept(@NonNull Subscription subscription) throws Exception {
-        //插入数据库
-
-      }
-    }).flatMap(new Function<Integer, Publisher<DownloadEvent>>() {
-      @Override public Publisher<DownloadEvent> apply(@NonNull Integer integer) throws Exception {
-        return download(downloadBean);
-      }
-    }).doOnNext(new Consumer<DownloadEvent>() {
-      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-        //更新数据库
-      }
-    }).doOnError(new Consumer<Throwable>() {
-      @Override public void accept(@NonNull Throwable throwable) throws Exception {
-        //更新数据库 失败
-      }
-    }).doOnCancel(new Action() {
-      @Override public void run() throws Exception {
-        //更新数据库 暂停
-      }
-    }).toObservable();
-
-    List<DownloadBean> beanList = downloadBundle.getDownloadList();
-
-    final PublishProcessor<DownloadEvent> publisher = PublishProcessor.create();
-
-    Flowable.fromIterable(beanList).filter(new Predicate<DownloadBean>() {
-      @Override public boolean test(@NonNull DownloadBean downloadBean) throws Exception {
-        return downloadBean.getCompletedSize() != downloadBean.getTotalSize();
-      }
-    }).doOnSubscribe(new Consumer<Subscription>() {
-      @Override public void accept(@NonNull Subscription subscription) throws Exception {
-        publisher.onSubscribe(subscription);
-      }
-    }).flatMap(new Function<DownloadBean, Flowable<DownloadEvent>>() {
-      @Override public Flowable<DownloadEvent> apply(@NonNull DownloadBean downloadBean)
-          throws Exception {
-        return download(downloadBean);
-      }
-    }).subscribe(new Consumer<DownloadEvent>() {
-      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-        //子任务更新
-      }
-    }, new Consumer<Throwable>() {
-      @Override public void accept(@NonNull Throwable throwable) throws Exception {
-        //失败一个
-      }
-    }, new Action() {
-      @Override public void run() throws Exception {
-        //增加一个
-      }
-    });
-    return publisher.toObservable();
-  }
-
-  private Publisher<DownloadEvent> save(final DownloadBean bean,
-      final Response<ResponseBody> response) {
-    return Flowable.create(new FlowableOnSubscribe<DownloadEvent>() {
-      @Override public void subscribe(FlowableEmitter<DownloadEvent> e) throws Exception {
-        saveFile(e, response, bean.getPath(), bean.getFileName());
-      }
-    }, BackpressureStrategy.LATEST)
-        //重试
-        .compose(RxUtils.<DownloadEvent>retry(bean.getUrl()));
-  }
-
-  /**
-   * 存储下载结果
-   */
-  private void saveFile(Emitter<DownloadEvent> emitter, Response<ResponseBody> response,
-      String path, String name) {
-    BufferedSink sink = null;
-    BufferedSource source = null;
-    try {
-      DownloadEvent downloadEvent = new DownloadEvent();
-      ResponseBody body = response.body();
-      downloadEvent.setCompletedSize(body.contentLength());
-      //File fileDir = new File(path);
-      //if (!fileDir.exists()) {
-      //  fileDir.mkdirs();
-      //}
-      File file = new File(path, name);
-      sink = Okio.buffer(Okio.sink(file));
-      long totalRead = 0;
-      long read = 0;
-      downloadEvent.setStatus(DOWNLOADING);
-      source = body.source();
-      while ((read = (source.read(sink.buffer(), DOWNLOAD_CHUNK_SIZE))) != -1) {
-        totalRead += read;
-        downloadEvent.setCompletedSize(totalRead);
-        emitter.onNext(downloadEvent);
-      }
-
-      sink.writeAll(source);
-      source.close();
-      emitter.onComplete();
-    } catch (IOException e) {
-      //e.printStackTrace();
-      emitter.onError(e);
-    } finally {
-      IOUtils.close(sink, source);
-    }
-  }
-
-  /**
    * 下载开始
    */
   public void startDownload(final Semaphore semaphore) throws InterruptedException {
     //控制信号量
-    L.i("startDownload");
-    semaphore.acquire();
     List<DownloadBean> downloadList = getUnFinished(downloadBundle.getDownloadList());
     if (downloadList.size() == 0) {
       //已经下载完毕 直接结束
     }
-
     //TODO 判断是否正确
     int unDownloadSize = downloadList.size();
-    final AtomicLong completeSize = new AtomicLong(downloadBundle.getCompletedSize());
-    final AtomicLong failSize = new AtomicLong(0);
 
-    final DownloadEvent event = new DownloadEvent();
+    completeSize = new AtomicLong(downloadBundle.getCompletedSize());
+    failSize = new AtomicLong(0);
+
+    event = new DownloadEvent();
     event.setCompletedSize(downloadBundle.getCompletedSize());
     event.setTotalSize(downloadBundle.getTotalSize());
+    event.setStatus(DOWNLOADING);
+    processorEvent.onNext(event);
 
-    Flowable.fromIterable(downloadList)
-        .flatMap(new Function<DownloadBean, Flowable<DownloadEvent>>() {
-          @Override public Flowable<DownloadEvent> apply(@NonNull DownloadBean downloadBean)
-              throws Exception {
-            return download(downloadBean);
-          }
-        }).subscribeOn(Schedulers.io())
-        .doFinally(new Action() {
-          @Override public void run() throws Exception {
-            if (completeSize.get() == downloadBundle.getTotalSize()) {
-              event.setStatus(FINISH);
-              processorEvent.onNext(event);
-            } else {
-              event.setStatus(ERROR);
-              processorEvent.onNext(event);
-            }
-            semaphore.release();
-          }
-        })
-        .subscribe(new Consumer<DownloadEvent>() {
-          @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-            L.i("downloading ....");
-          }
-        }, new Consumer<Throwable>() {
-          @Override public void accept(@NonNull Throwable throwable) throws Exception {
-            L.e("error " + throwable);
-            failSize.incrementAndGet();
-          }
-        }, new Action() {
-          @Override public void run() throws Exception {
-            L.i("finished");
-            long completed = completeSize.incrementAndGet();
-            event.setCompletedSize(completed);
-            event.setStatus(DOWNLOADING);
-            processorEvent.onNext(event);
-          }
-        });
+    for (DownloadBean bean : downloadList) {
+      itemTasks.add(new ItemTask(mDownloadApi, downloadDB, bean));
+    }
+
+    for (ItemTask task : itemTasks) {
+      task.startDownload(semaphore, taskObserver);
+    }
+
+    //for (int i = 0; i < downloadList.size() && !isCancel; i++) {
+    //  DownloadBean bean = downloadList.get(i);
+    //  if (isCancel) {
+    //    L.i("isCancel");
+    //    break;
+    //  }
+    //  disposable = download(bean).subscribeOn(Schedulers.io())
+    //      //取消下载
+    //      .doOnCancel(new Action() {
+    //        @Override public void run() throws Exception {
+    //          downloadBundle.setStatus(PAUSE);
+    //          downloadDB.updateDownloadBundle(downloadBundle);
+    //        }
+    //      }).doFinally(new Action() {
+    //        @Override public void run() throws Exception {
+    //          if (failSize.longValue() + completeSize.longValue()
+    //              == downloadBundle.getTotalSize()) {
+    //            if (completeSize.get() == downloadBundle.getTotalSize()) {
+    //
+    //              downloadBundle.setStatus(FINISH);
+    //              downloadDB.updateDownloadBundle(downloadBundle);
+    //
+    //              event.setStatus(FINISH);
+    //              processorEvent.onNext(event);
+    //            } else {
+    //
+    //              downloadBundle.setStatus(ERROR);
+    //              downloadDB.updateDownloadBundle(downloadBundle);
+    //
+    //              event.setStatus(ERROR);
+    //              processorEvent.onNext(event);
+    //            }
+    //            semaphore.release();
+    //          }
+    //        }
+    //      }).subscribe(new Consumer<DownloadEvent>() {
+    //        @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+    //
+    //        }
+    //      }, new Consumer<Throwable>() {
+    //        @Override public void accept(@NonNull Throwable throwable) throws Exception {
+    //          failSize.incrementAndGet();
+    //          L.i("error " + failSize + "      " + throwable.toString());
+    //        }
+    //      }, new Action() {
+    //        @Override public void run() throws Exception {
+    //          completeSize.incrementAndGet();
+    //          long completed = completeSize.longValue();
+    //
+    //          downloadBundle.setStatus(DOWNLOADING);
+    //          downloadBundle.setCompletedSize(completed);
+    //          downloadDB.updateDownloadBundle(downloadBundle);
+    //
+    //          event.setCompletedSize(completed);
+    //          event.setStatus(DOWNLOADING);
+    //          processorEvent.onNext(event);
+    //          L.i("finished " + completeSize);
+    //        }
+    //      });
+    //  if (isCancel) {
+    //    break;
+    //  }
+    //}
   }
 
   private List<DownloadBean> getUnFinished(List<DownloadBean> downloadList) {
@@ -260,19 +183,200 @@ public class DownloadTask {
   }
 
   public void init(Map<String, DownloadTask> taskMap,
-      Map<String, FlowableProcessor<DownloadEvent>> processorMap) {
+      Map<String, FlowableProcessor<DownloadEvent>> processorMap, IDownloadDB downloadDB) {
     DownloadTask task = taskMap.get(downloadBundle.getKey());
     if (task == null) {
       taskMap.put(downloadBundle.getKey(), this);
     } else {
-      if (task.isCancle) {
+      if (task.isCancel) {
         taskMap.put(downloadBundle.getKey(), this);
       } else {
         //已经存在
       }
     }
     processorEvent = createProcessor(downloadBundle.getKey(), processorMap);
+    this.downloadDB = downloadDB;
   }
 
+  //public Observable<DownloadEvent> startDownload(DownloadBundle downloadBundle) {
+  //
+  //  final DownloadBean downloadBean = downloadBundle.getDownloadList().get(0);
+  //  //download();
+  //  Flowable.just(1).doOnSubscribe(new Consumer<Subscription>() {
+  //    @Override public void accept(@NonNull Subscription subscription) throws Exception {
+  //      //插入数据库
+  //
+  //    }
+  //  }).flatMap(new Function<Integer, Publisher<DownloadEvent>>() {
+  //    @Override public Publisher<DownloadEvent> apply(@NonNull Integer integer) throws Exception {
+  //      return download(downloadBean);
+  //    }
+  //  }).doOnNext(new Consumer<DownloadEvent>() {
+  //    @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+  //      //更新数据库
+  //    }
+  //  }).doOnError(new Consumer<Throwable>() {
+  //    @Override public void accept(@NonNull Throwable throwable) throws Exception {
+  //      //更新数据库 失败
+  //    }
+  //  }).doOnCancel(new Action() {
+  //    @Override public void run() throws Exception {
+  //      //更新数据库 暂停
+  //    }
+  //  }).toObservable();
+  //
+  //  List<DownloadBean> beanList = downloadBundle.getDownloadList();
+  //
+  //  final PublishProcessor<DownloadEvent> publisher = PublishProcessor.create();
+  //
+  //  Flowable.fromIterable(beanList).filter(new Predicate<DownloadBean>() {
+  //    @Override public boolean test(@NonNull DownloadBean downloadBean) throws Exception {
+  //      return downloadBean.getCompletedSize() != downloadBean.getTotalSize();
+  //    }
+  //  }).doOnSubscribe(new Consumer<Subscription>() {
+  //    @Override public void accept(@NonNull Subscription subscription) throws Exception {
+  //      publisher.onSubscribe(subscription);
+  //    }
+  //  }).flatMap(new Function<DownloadBean, Flowable<DownloadEvent>>() {
+  //    @Override public Flowable<DownloadEvent> apply(@NonNull DownloadBean downloadBean)
+  //        throws Exception {
+  //      return download(downloadBean);
+  //    }
+  //  }).subscribe(new Consumer<DownloadEvent>() {
+  //    @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+  //      //子任务更新
+  //    }
+  //  }, new Consumer<Throwable>() {
+  //    @Override public void accept(@NonNull Throwable throwable) throws Exception {
+  //      //失败一个
+  //    }
+  //  }, new Action() {
+  //    @Override public void run() throws Exception {
+  //      //增加一个
+  //    }
+  //  });
+  //  return publisher.toObservable();
+  //}
 
+  public void insertOrUpdate() {
+    if (downloadDB.existsDownloadBundle(downloadBundle.getKey())) {
+
+    } else {
+      downloadDB.insertDownloadBundle(downloadBundle);
+    }
+  }
+
+  //public void pause() {
+  //  isCancel = true;
+  //  if (disposable != null && !disposable.isDisposed()) {
+  //    disposable.dispose();
+  //  }
+  //  //从数据库查询出它的 下载进度再设置 暂停
+  //  if (processorEvent != null) {
+  //    DownloadEvent downloadEvent = downloadDB.selectBundleStatus(downloadBundle.getKey());
+  //    downloadEvent.setStatus(PAUSE);
+  //    processorEvent.onNext(downloadEvent);
+  //  }
+  //}
+
+  //
+  //Flowable.fromIterable(downloadList)
+  //    .flatMap(new Function<DownloadBean, Flowable<DownloadEvent>>() {
+  //      @Override public Flowable<DownloadEvent> apply(@NonNull DownloadBean downloadBean)
+  //          throws Exception {
+  //        return download(downloadBean);
+  //      }
+  //    })
+  //    .subscribeOn(Schedulers.io())
+  //    .doFinally(new Action() {
+  //      @Override public void run() throws Exception {
+  //        if (completeSize.get() == downloadBundle.getTotalSize()) {
+  //          event.setStatus(FINISH);
+  //          processorEvent.onNext(event);
+  //        } else {
+  //          event.setStatus(ERROR);
+  //          processorEvent.onNext(event);
+  //        }
+  //        semaphore.release();
+  //      }
+  //    })
+  //    .subscribe(new Consumer<DownloadEvent>() {
+  //      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+  //      }
+  //    }, new Consumer<Throwable>() {
+  //      @Override public void accept(@NonNull Throwable throwable) throws Exception {
+  //        L.e("error " + throwable);
+  //        failSize.incrementAndGet();
+  //      }
+  //    }, new Action() {
+  //      @Override public void run() throws Exception {
+  //        L.i("finished");
+  //        long completed = completeSize.incrementAndGet();
+  //        event.setCompletedSize(completed);
+  //        event.setStatus(DOWNLOADING);
+  //        processorEvent.onNext(event);
+  //      }
+  //    });
+
+  public class TaskObserver implements Observer<DownloadEvent> {
+
+    @Override public void onSubscribe(Disposable d) {
+      //event.setStatus(DOWNLOADING);
+      //processorEvent.onNext(event);
+    }
+
+    @Override public void onNext(DownloadEvent downloadEvent) {
+
+    }
+
+    @Override public void onError(Throwable e) {
+      //错误++
+      L.i("onError--------------------------");
+      failSize.incrementAndGet();
+      checkFinished();
+    }
+
+    @Override public void onComplete() {
+      //正确++
+      L.i("onComplete--------------------------");
+
+      completeSize.incrementAndGet();
+
+      L.i("onComplete----------" + completeSize.longValue() + "----------------");
+
+      if (!checkFinished()) {
+        downloadBundle.setCompletedSize(completeSize.longValue());
+        downloadBundle.setStatus(DOWNLOADING);
+        event.setCompletedSize(completeSize.longValue());
+        downloadDB.updateDownloadBundle(downloadBundle);
+        event.setStatus(DOWNLOADING);
+        processorEvent.onNext(event);
+      }
+    }
+
+    private boolean checkFinished() {
+      if (failSize.longValue() + completeSize.longValue() == downloadBundle.getTotalSize()) {
+        if (completeSize.get() == downloadBundle.getTotalSize()) {
+
+          downloadBundle.setCompletedSize(completeSize.longValue());
+          downloadBundle.setStatus(FINISH);
+          downloadDB.updateDownloadBundle(downloadBundle);
+
+          event.setCompletedSize(completeSize.longValue());
+          event.setStatus(FINISH);
+          processorEvent.onNext(event);
+        } else {
+
+          downloadBundle.setStatus(ERROR);
+          downloadBundle.setCompletedSize(completeSize.longValue());
+          downloadDB.updateDownloadBundle(downloadBundle);
+
+          event.setStatus(ERROR);
+          processorEvent.onNext(event);
+        }
+        return true;
+      }
+      return false;
+    }
+  }
 }

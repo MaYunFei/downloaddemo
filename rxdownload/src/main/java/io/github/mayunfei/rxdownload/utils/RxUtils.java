@@ -21,6 +21,9 @@ import retrofit2.HttpException;
  */
 
 public class RxUtils {
+  /**
+   * 默认重试的次数
+   */
   private static final int RETRY_COUNT = 3;
 
   private RxUtils() {
@@ -34,7 +37,8 @@ public class RxUtils {
     return new FlowableTransformer<T, T>() {
       @Override public Publisher<T> apply(Flowable<T> upstream) {
         return upstream.retry(new BiPredicate<Integer, Throwable>() {
-          @Override public boolean test(@NonNull Integer integer, @NonNull Throwable throwable) throws Exception {
+          @Override public boolean test(@NonNull Integer integer, @NonNull Throwable throwable)
+              throws Exception {
             return retry(message, integer, throwable);
           }
         });
@@ -46,6 +50,7 @@ public class RxUtils {
    * 重试规则
    */
   private static boolean retry(String msg, Integer count, Throwable throwable) {
+    L.i("Tryyyyyyyyyyyyyyyyyyyyyy");
     if (throwable instanceof ProtocolException) {
       if (count < RETRY_COUNT + 1) {
         return true;

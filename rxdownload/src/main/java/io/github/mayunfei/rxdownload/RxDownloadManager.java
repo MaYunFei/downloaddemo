@@ -7,6 +7,7 @@ import io.github.mayunfei.rxdownload.download.DownloadTask;
 import io.github.mayunfei.rxdownload.download.ServiceHelper;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import retrofit2.Retrofit;
 
 /**
@@ -22,12 +23,16 @@ public class RxDownloadManager {
     downloadApi = retrofit.create(DownloadApi.class);
   }
 
-  public Observable<?> addDownladTask(final DownloadTask downloadTask) {
+  public Observable<?> addDownloadTask(final DownloadTask downloadTask) {
     downloadTask.init(downloadApi);
-    return serviceHelper.addTask(downloadTask);
+    return serviceHelper.addTask(downloadTask).observeOn(AndroidSchedulers.mainThread());
   }
 
-  public Observable<DownloadEvent> getDownloadEvent(String key){
-    return serviceHelper.getDownloadEvent(key);
+  public Observable<DownloadEvent> getDownloadEvent(String key) {
+    return serviceHelper.getDownloadEvent(key).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  public Observable<?> pause(String key) {
+    return serviceHelper.pause(key);
   }
 }

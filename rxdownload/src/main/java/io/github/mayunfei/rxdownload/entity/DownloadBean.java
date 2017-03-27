@@ -16,7 +16,7 @@ public class DownloadBean {
   public static final String TOTAL_SIZE = "totalSize";
   public static final String COMPLETED_SIZE = "completedSize";
   public static final String URL = "url";
-  public static final String CREAT_TABLE = "CREATE TABLE "
+  public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
       + " ("
       + ID
@@ -44,11 +44,11 @@ public class DownloadBean {
   public static ContentValues insert(DownloadBean downloadBean) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(BUNDLE_ID, downloadBean.getBundleId());
-    contentValues.put(FILENAME, downloadBean.getBundleId());
-    contentValues.put(PATH, downloadBean.getBundleId());
-    contentValues.put(TOTAL_SIZE, downloadBean.getBundleId());
-    contentValues.put(COMPLETED_SIZE, downloadBean.getBundleId());
-    contentValues.put(URL, downloadBean.getBundleId());
+    contentValues.put(FILENAME, downloadBean.getFileName());
+    contentValues.put(PATH, downloadBean.getPath());
+    contentValues.put(TOTAL_SIZE, downloadBean.getTotalSize());
+    contentValues.put(COMPLETED_SIZE, downloadBean.getCompletedSize());
+    contentValues.put(URL, downloadBean.getUrl());
     return contentValues;
   }
 
@@ -62,8 +62,8 @@ public class DownloadBean {
   private int bundleId;
   private String fileName;
   private String path;
-  private long totalSize;
-  private long completedSize;
+  private long totalSize = -1;
+  private long completedSize = 0;
   private String url;
 
   public int getId() {
@@ -120,5 +120,27 @@ public class DownloadBean {
 
   public void setUrl(String url) {
     this.url = url;
+  }
+
+  @Override public String toString() {
+    return "DownloadBean{"
+        + "id="
+        + id
+        + ", bundleId="
+        + bundleId
+        + ", fileName='"
+        + fileName
+        + '\''
+        + ", path='"
+        + path
+        + '\''
+        + ", totalSize="
+        + totalSize
+        + ", completedSize="
+        + completedSize
+        + ", url='"
+        + url
+        + '\''
+        + '}';
   }
 }

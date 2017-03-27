@@ -1,7 +1,6 @@
 package io.github.mayunfei.rxdownload.utils;
 
 import android.util.Log;
-import io.github.mayunfei.rxdownload.BuildConfig;
 
 /**
  * Created by mayunfei on 17-3-24.

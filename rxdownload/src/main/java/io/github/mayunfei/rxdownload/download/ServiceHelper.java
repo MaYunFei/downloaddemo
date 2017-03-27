@@ -111,6 +111,14 @@ public class ServiceHelper {
     });
   }
 
+  public Observable<?> pause(final String key) {
+    return createGeneralObservable(new GeneralObservableCallback() {
+      @Override public void call() throws Exception {
+        downloadService.pause(key);
+      }
+    });
+  }
+
   public interface GeneralObservableCallback {
     void call() throws Exception;
   }
