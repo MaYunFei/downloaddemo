@@ -32,10 +32,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     retrofit = new Retrofit.Builder().baseUrl("http://www.exam.com/")
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .build();
-    rxDownloadManager = new RxDownloadManager();
+    rxDownloadManager = RxDownloadManager.getInstance();
     rxDownloadManager.init(this, retrofit);
     ActivityCompat.requestPermissions(this,
         new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+    rxDownloadManager.getDownloadEvent("yunfei").subscribe(new Consumer<DownloadEvent>() {
+      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+        Log.i("******event******", downloadEvent.toString());
+      }
+    });
   }
 
   @Override public void onClick(View v) {
@@ -65,23 +70,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DownloadBean bean1 = new DownloadBean();
     DownloadBean bean2 = new DownloadBean();
     DownloadBean bean3 = new DownloadBean();
-    bean0.setFileName("000.ts");
+    bean0.setFileName("000.png");
     bean0.setUrl(
-        "https://mv.dongaocloud.com/2b4f/2b51/d42/278/d704d5c7c226a371f8b34926f14330f0/d704d5c7c226a371f8b34926f14330f0-000.ts");
+        "http://img.wdjimg.com/mms/icon/v1/d/f1/1c8ebc9ca51390cf67d1c3c3d3298f1d_512_512.png");
     bean0.setPath(Environment.getExternalStorageDirectory().getAbsolutePath()
         + File.separator
         + "rxdownload");
     File file = new File(bean0.getPath());
     file.mkdirs();
-    bean1.setFileName("001.ts");
+    bean1.setFileName("001.png");
     bean1.setUrl(
-        "https://mv.dongaocloud.com/2b4f/2b51/d42/278/d704d5c7c226a371f8b34926f14330f0/d704d5c7c226a371f8b34926f14330f0-00.ts");
+        "http://img.wdjimg.com/mms/icon/v1/3/2d/dc14dd1e40b8e561eae91584432262d3_512_512.png");
     bean1.setPath(Environment.getExternalStorageDirectory().getAbsolutePath()
         + File.separator
         + "rxdownload");
-    bean2.setFileName("002.ts");
+    bean2.setFileName("002.png");
     bean2.setUrl(
-        "https://mv.dongaocloud.com/2b4f/2b51/d42/278/d704d5c7c226a371f8b34926f14330f0/d704d5c7c226a371f8b34926f14330f0-002.ts");
+        "http://img.wdjimg.com/mms/icon/v1/8/10/1b26d9f0a258255b0431c03a21c0d108_512_512.pn");
     bean2.setPath(Environment.getExternalStorageDirectory().getAbsolutePath()
         + File.separator
         + "rxdownload");
@@ -105,11 +110,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
           }
         });
-
-    rxDownloadManager.getDownloadEvent("yunfei").subscribe(new Consumer<DownloadEvent>() {
-      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-        Log.i("******event******", downloadEvent.toString());
-      }
-    });
   }
 }

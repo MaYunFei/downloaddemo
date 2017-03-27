@@ -30,7 +30,6 @@ public class DownloadService extends Service {
   private BlockingQueue<DownloadTask> downloadQueue;
   private Map<String, DownloadTask> taskMap;
   private Map<String, FlowableProcessor<DownloadEvent>> processorMap;
-
   private IDownloadDB mDownloadDB;
   //控制线程的信号量
   private Semaphore semaphore;
@@ -53,7 +52,7 @@ public class DownloadService extends Service {
     L.i("onStartCommand Service");
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(5);
+      semaphore = new Semaphore(1);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -103,10 +102,9 @@ public class DownloadService extends Service {
 
   public void pause(String key) {
     DownloadTask downloadTask = taskMap.get(key);
-    //if (downloadTask!=null){
-    //  downloadTask.pause();
-    //}
-
+    if (downloadTask != null) {
+      downloadTask.pause();
+    }
   }
 
   public FlowableProcessor<DownloadEvent> getDownloadEvent(String key) {

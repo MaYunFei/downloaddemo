@@ -64,6 +64,10 @@ public class DownloadTask {
   private AtomicLong completeSize;
   private AtomicLong failSize;
   private TaskObserver taskObserver;
+  /**
+   * 用于通知下载状态
+   */
+  private FlowableProcessor<DownloadEvent> processorEvent;
 
   public DownloadTask(DownloadBundle downloadBundle) {
     this.downloadBundle = downloadBundle;
@@ -74,11 +78,6 @@ public class DownloadTask {
     itemTasks = new ArrayList<>();
     taskObserver = new TaskObserver();
   }
-
-  /**
-   * 用于通知下载状态
-   */
-  private FlowableProcessor<DownloadEvent> processorEvent;
 
   /**
    * 下载开始
@@ -100,6 +99,9 @@ public class DownloadTask {
     event.setTotalSize(downloadBundle.getTotalSize());
     event.setStatus(DOWNLOADING);
     processorEvent.onNext(event);
+    if (isCancel){
+      return;
+    }
 
     for (DownloadBean bean : downloadList) {
       itemTasks.add(new ItemTask(mDownloadApi, downloadDB, bean));
@@ -177,7 +179,9 @@ public class DownloadTask {
   private List<DownloadBean> getUnFinished(List<DownloadBean> downloadList) {
     List<DownloadBean> unDownload = new ArrayList<>();
     for (DownloadBean bean : downloadList) {
-      unDownload.add(bean);
+      if (bean.getTotalSize() != bean.getCompletedSize()) {
+        unDownload.add(bean);
+      }
     }
     return unDownload;
   }
@@ -189,9 +193,12 @@ public class DownloadTask {
       taskMap.put(downloadBundle.getKey(), this);
     } else {
       if (task.isCancel) {
-        taskMap.put(downloadBundle.getKey(), this);
+        DownloadBundle oldBundle = task.downloadBundle;
+        this.downloadBundle.init(oldBundle);
+        taskMap.put(this.downloadBundle.getKey(), this);
       } else {
         //已经存在
+        throw new IllegalArgumentException("已经存在了  "+downloadBundle.getKey());
       }
     }
     processorEvent = createProcessor(downloadBundle.getKey(), processorMap);
@@ -266,18 +273,18 @@ public class DownloadTask {
     }
   }
 
-  //public void pause() {
-  //  isCancel = true;
-  //  if (disposable != null && !disposable.isDisposed()) {
-  //    disposable.dispose();
-  //  }
-  //  //从数据库查询出它的 下载进度再设置 暂停
-  //  if (processorEvent != null) {
-  //    DownloadEvent downloadEvent = downloadDB.selectBundleStatus(downloadBundle.getKey());
-  //    downloadEvent.setStatus(PAUSE);
-  //    processorEvent.onNext(downloadEvent);
-  //  }
-  //}
+  public void pause() {
+    isCancel = true;
+    //从数据库查询出它的 下载进度再设置 暂停
+    for (ItemTask task : itemTasks) {
+      task.pause();
+    }
+    if (processorEvent != null) {
+      DownloadEvent downloadEvent = downloadDB.selectBundleStatus(downloadBundle.getKey());
+      downloadEvent.setStatus(PAUSE);
+      processorEvent.onNext(downloadEvent);
+    }
+  }
 
   //
   //Flowable.fromIterable(downloadList)
@@ -331,7 +338,7 @@ public class DownloadTask {
 
     @Override public void onError(Throwable e) {
       //错误++
-      L.i("onError--------------------------");
+      L.i("onError-----------" + e.toString());
       failSize.incrementAndGet();
       checkFinished();
     }
@@ -372,6 +379,8 @@ public class DownloadTask {
           downloadDB.updateDownloadBundle(downloadBundle);
 
           event.setStatus(ERROR);
+          event.setCompletedSize(completeSize.longValue());
+
           processorEvent.onNext(event);
         }
         return true;

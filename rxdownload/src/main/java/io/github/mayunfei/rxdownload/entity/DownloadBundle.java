@@ -20,6 +20,7 @@ public class DownloadBundle {
   public static final String TOTAL_SIZE = "totalSize";
   public static final String COMPLETED_SIZE = "completedSize";
   public static final String STATUS = "status";
+  //分类存储
   public static final String TYPE = "type";
 
   public static final String CREATE_TABLE = "CREATE TABLE "
@@ -150,5 +151,11 @@ public class DownloadBundle {
         + ", type="
         + type
         + '}';
+  }
+
+  public void init(DownloadBundle oldBundle) {
+    this.setDownloadList(oldBundle.getDownloadList());
+    this.setTotalSize(oldBundle.getTotalSize());
+    this.setCompletedSize(oldBundle.getCompletedSize());
   }
 }

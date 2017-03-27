@@ -16,7 +16,7 @@ import io.reactivex.ObservableOnSubscribe;
  */
 
 public class DownloadDao implements IDownloadDB {
-  private static final String TAG = "SQL$$$$$$$$$$$$$$$$$$";
+  private static final String TAG = "SQLLLLLLLLLL";
 
   private volatile static DownloadDao singleton;
   private SQLiteHelper sqLiteHelper;

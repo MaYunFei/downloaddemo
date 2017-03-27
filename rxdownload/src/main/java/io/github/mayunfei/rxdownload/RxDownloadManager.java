@@ -1,13 +1,20 @@
 package io.github.mayunfei.rxdownload;
 
 import android.content.Context;
+import android.os.Environment;
 import io.github.mayunfei.rxdownload.download.DownloadApi;
 import io.github.mayunfei.rxdownload.download.DownloadService;
 import io.github.mayunfei.rxdownload.download.DownloadTask;
 import io.github.mayunfei.rxdownload.download.ServiceHelper;
+import io.github.mayunfei.rxdownload.entity.DownloadBean;
+import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
+import io.github.mayunfei.rxdownload.utils.FileUtils;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import retrofit2.Retrofit;
 
 /**
@@ -17,10 +24,36 @@ import retrofit2.Retrofit;
 public class RxDownloadManager {
   private ServiceHelper serviceHelper;
   private DownloadApi downloadApi;
+  private String defPath = FileUtils.getDefaultFilePath();
+
+  private static RxDownloadManager instance = new RxDownloadManager();
+
+  private RxDownloadManager() {
+  }
+
+  public static RxDownloadManager getInstance() {
+    return instance;
+  }
 
   public void init(Context context, Retrofit retrofit) {
     serviceHelper = new ServiceHelper(context);
     downloadApi = retrofit.create(DownloadApi.class);
+  }
+
+  public Observable<?> addDownloadTask(String url) {
+    DownloadBean bean = DownloadBean.newBuilder()
+        .url(url)
+        .fileName(FileUtils.getFileNameFromUrl(url))
+        .path(defPath)
+        .build();
+
+    List<DownloadBean> downloadBeanList = new ArrayList<>();
+    downloadBeanList.add(bean);
+    DownloadBundle downloadBundle = new DownloadBundle();
+    downloadBundle.setKey(url);
+    downloadBundle.setDownloadList(downloadBeanList);
+    downloadBundle.setTotalSize(downloadBeanList.size());
+    return addDownloadTask(new DownloadTask(downloadBundle));
   }
 
   public Observable<?> addDownloadTask(final DownloadTask downloadTask) {

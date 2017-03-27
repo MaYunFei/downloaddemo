@@ -41,6 +41,18 @@ public class DownloadBean {
       + DownloadBundle.ID
       + "))";
 
+  public DownloadBean() {
+
+  }
+
+  private DownloadBean(Builder builder) {
+    setFileName(builder.fileName);
+    setPath(builder.path);
+    setTotalSize(builder.totalSize);
+    setCompletedSize(builder.completedSize);
+    setUrl(builder.url);
+  }
+
   public static ContentValues insert(DownloadBean downloadBean) {
     ContentValues contentValues = new ContentValues();
     contentValues.put(BUNDLE_ID, downloadBean.getBundleId());
@@ -65,6 +77,10 @@ public class DownloadBean {
   private long totalSize = -1;
   private long completedSize = 0;
   private String url;
+
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 
   public int getId() {
     return id;
@@ -142,5 +158,45 @@ public class DownloadBean {
         + url
         + '\''
         + '}';
+  }
+
+  public static final class Builder {
+    private String fileName;
+    private String path;
+    private long totalSize = -1;
+    private long completedSize = 0;
+    private String url;
+
+    private Builder() {
+    }
+
+    public Builder fileName(String val) {
+      fileName = val;
+      return this;
+    }
+
+    public Builder path(String val) {
+      path = val;
+      return this;
+    }
+
+    public Builder totalSize(long val) {
+      totalSize = val;
+      return this;
+    }
+
+    public Builder completedSize(long val) {
+      completedSize = val;
+      return this;
+    }
+
+    public Builder url(String val) {
+      url = val;
+      return this;
+    }
+
+    public DownloadBean build() {
+      return new DownloadBean(this);
+    }
   }
 }

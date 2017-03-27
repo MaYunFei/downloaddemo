@@ -43,6 +43,15 @@ public class ItemTask {
   private Disposable disposable;
   private DownloadBean downloadBean;
 
+  boolean isCancel = false;
+
+  public void pause() {
+    isCancel = true;
+    if (disposable != null && !disposable.isDisposed()) {
+      disposable.dispose();
+    }
+  }
+
   public ItemTask(DownloadApi mDownloadApi, IDownloadDB downloadDB, DownloadBean downloadBean) {
     this.mDownloadApi = mDownloadApi;
     this.downloadDB = downloadDB;
@@ -51,8 +60,13 @@ public class ItemTask {
 
   public void startDownload(final Semaphore semaphore, final DownloadTask.TaskObserver taskObserver)
       throws InterruptedException {
+    if (isCancel) {
+      return;
+    }
     semaphore.acquire();
-
+    if (isCancel) {
+      return;
+    }
     disposable = download(downloadBean).toObservable()
         .subscribeOn(Schedulers.io())
         .doOnSubscribe(new Consumer<Disposable>() {
