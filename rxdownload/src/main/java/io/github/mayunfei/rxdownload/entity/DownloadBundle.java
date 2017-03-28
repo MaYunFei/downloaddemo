@@ -70,6 +70,12 @@ public class DownloadBundle {
     return downloadBundle;
   }
 
+  public static ContentValues update(int status) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(STATUS, status);
+    return contentValues;
+  }
+
   public static ContentValues update(DownloadBundle downloadBundle) {
     ContentValues insert = insert(downloadBundle);
     insert.put(ID, downloadBundle.getId());

@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
+import io.github.mayunfei.rxdownload.entity.DownloadStatus;
 import io.github.mayunfei.rxdownload.utils.L;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -51,15 +52,17 @@ public class DownloadDao implements IDownloadDB {
 
   @Override public DownloadEvent selectBundleStatus(String key) {
     DownloadEvent downloadEvent = new DownloadEvent();
-    Cursor cursor = getReadableDatabase().query(DownloadBundle.TABLE_NAME,
-        new String[] { DownloadBundle.TOTAL_SIZE, DownloadBundle.COMPLETED_SIZE },
-        DownloadBundle.KEY + "=?", new String[] { key }, null, null, null);
+    Cursor cursor = getReadableDatabase().query(DownloadBundle.TABLE_NAME, new String[] {
+        DownloadBundle.TOTAL_SIZE, DownloadBundle.COMPLETED_SIZE, DownloadBundle.STATUS
+    }, DownloadBundle.KEY + "=?", new String[] { key }, null, null, null);
 
     cursor.moveToFirst();
     if (cursor.getCount() != 0) {
       long total = DBHelper.getLong(cursor, DownloadBundle.TOTAL_SIZE);
       long complete = DBHelper.getLong(cursor, DownloadBundle.COMPLETED_SIZE);
+      int status = DBHelper.getInt(cursor, DownloadBundle.STATUS);
       downloadEvent.setTotalSize(total);
+      downloadEvent.setStatus(status);
       downloadEvent.setCompletedSize(complete);
     }
 
@@ -67,9 +70,11 @@ public class DownloadDao implements IDownloadDB {
   }
 
   @Override public List<DownloadBundle> getAllDownloadBundle() {
+
     Cursor cursor =
-        getReadableDatabase().rawQuery("SELECT * FROM" + DownloadBundle.TABLE_NAME, null);
+        getReadableDatabase().rawQuery("SELECT * FROM " + DownloadBundle.TABLE_NAME, null);
     ArrayList<DownloadBundle> list = new ArrayList<>(cursor.getCount());
+    L.i(TAG, "getAllDownloadBundle \n");
     try {
       while (cursor.moveToNext()) {
         DownloadBundle downloadBundle = DownloadBundle.getDownloadBundle(cursor);
@@ -82,10 +87,33 @@ public class DownloadDao implements IDownloadDB {
     return list;
   }
 
+  @Override public void pauseAll() {
+
+    getWritableDatabase().update(DownloadBundle.TABLE_NAME,
+        DownloadBundle.update(DownloadStatus.PAUSE),
+        DownloadBundle.STATUS + "=? OR " + DownloadBundle.STATUS + "= ?",
+        new String[] { DownloadStatus.DOWNLOADING + "", DownloadStatus.QUEUE + "" });
+  }
+
+  @Override public DownloadBundle getDownloadBundle(String key) {
+    Cursor cursor = getReadableDatabase().rawQuery(
+        "SELECT * FROM " + DownloadBundle.TABLE_NAME + " WHERE " + DownloadBundle.KEY + " =?",
+        new String[] { key });
+    try {
+      if (cursor.moveToFirst()) {
+        return DownloadBundle.getDownloadBundle(cursor);
+      }
+    } finally {
+      cursor.close();
+    }
+
+    return null;
+  }
+
   private List<DownloadBean> getDownloadBeans(int bundleId) {
 
     Cursor cursor = getReadableDatabase().rawQuery(
-        "SELECT * FROM" + DownloadBean.TABLE_NAME + " WHERE " + DownloadBean.BUNDLE_ID + " = ?",
+        "SELECT * FROM " + DownloadBean.TABLE_NAME + " WHERE " + DownloadBean.BUNDLE_ID + " = ?",
         new String[] { bundleId + "" });
     ArrayList<DownloadBean> list = new ArrayList<>(cursor.getCount());
     try {

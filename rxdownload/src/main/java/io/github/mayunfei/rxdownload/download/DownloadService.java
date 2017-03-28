@@ -29,9 +29,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.QUEUE;
 import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
 
 public class DownloadService extends Service {
+  private static final String TAG = "2222222222222222";
+
   public static final String INTENT_KEY = "io.github.mayunfei.rxdownload.max_download_number";
   private DownloadBinder mBinder;
 
@@ -57,7 +63,10 @@ public class DownloadService extends Service {
 
   @Override public int onStartCommand(Intent intent, int flags, int startId) {
     //只会执行一次
-    L.i("onStartCommand Service");
+    L.i(TAG, "onStartCommand Service");
+    //暂停数据
+    mDownloadDB.pauseAll();
+
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
       semaphore = new Semaphore(2);
@@ -66,7 +75,7 @@ public class DownloadService extends Service {
   }
 
   @Override public IBinder onBind(Intent intent) {
-    L.i("binding Service");
+    L.i(TAG, "binding Service");
     startDispatch();
     return mBinder;
   }
@@ -102,10 +111,20 @@ public class DownloadService extends Service {
   }
 
   public void addTask(DownloadTask downloadTask) throws InterruptedException {
-    //初始化
-    downloadTask.init(taskMap, processorMap, mDownloadDB);
-    downloadTask.insertOrUpdate();
-    downloadQueue.put(downloadTask);
+    DownloadEvent downloadEvent = mDownloadDB.selectBundleStatus(downloadTask.getKey());
+    if (downloadEvent.getStatus() == FINISH) {
+      createProcessor(downloadTask.getKey(), processorMap).onNext(downloadEvent);
+    } else {
+      //初始化
+      DownloadTask task = taskMap.get(downloadTask.getKey());
+      if (task != null && !task.isCancel()) {
+        return;
+      }
+      downloadTask.init(taskMap, processorMap, mDownloadDB);
+      downloadTask.insertOrUpdate();
+      downloadEvent.setStatus(QUEUE);
+      downloadQueue.put(downloadTask);
+    }
   }
 
   public void pause(String key) {
@@ -120,12 +139,22 @@ public class DownloadService extends Service {
     DownloadTask task = taskMap.get(key);
     if (task == null) {
       //判断是否有数据库 是否有文件
+      DownloadEvent downloadEvent = mDownloadDB.selectBundleStatus(key);
+      if (downloadEvent.getTotalSize() == -1) { //数据库没有数据
+        downloadEvent.setStatus(ERROR);
+        downloadEvent.setCompletedSize(0);
+        downloadEvent.setTotalSize(100);
+      } else {
+        downloadEvent.setStatus(PAUSE);
+      }
+      processor.onNext(downloadEvent);
     }
 
     return processor;
   }
 
   @Override public void onDestroy() {
+    L.i(TAG, "onDestroy");
     mDownloadDB.closeDataBase();
     super.onDestroy();
   }
@@ -136,5 +165,25 @@ public class DownloadService extends Service {
         return mDownloadDB.getAllDownloadBundle();
       }
     });
+  }
+
+  public void pauseAll() {
+    for (DownloadTask task : taskMap.values()) {
+      task.pause();
+    }
+  }
+
+  public void startAll() throws InterruptedException {
+    for (DownloadTask task : taskMap.values()) {
+      if (!task.isFinished()) {
+        addTask(task);
+      }
+    }
+  }
+
+  public void startList(DownloadTask... tasks) throws InterruptedException {
+    for (DownloadTask task : tasks) {
+      addTask(task);
+    }
   }
 }

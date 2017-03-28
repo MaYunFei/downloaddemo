@@ -35,4 +35,5 @@ dependencies {
   provided deps.retrofit
   provided deps.retrofitAdapterRxjava2
   provided deps.retrofitconverterGson
+  compile 'org.jsoup:jsoup:1.10.2'
 }

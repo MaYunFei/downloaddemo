@@ -35,4 +35,8 @@ public interface IDownloadDB {
   DownloadEvent selectBundleStatus(String key);
 
   List<DownloadBundle> getAllDownloadBundle();
+
+  void pauseAll();
+
+  DownloadBundle getDownloadBundle(String key);
 }

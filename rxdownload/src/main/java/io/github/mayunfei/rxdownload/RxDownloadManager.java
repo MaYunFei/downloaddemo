@@ -10,8 +10,15 @@ import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.github.mayunfei.rxdownload.utils.FileUtils;
+import io.github.mayunfei.rxdownload.utils.ParserUtils;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +45,24 @@ public class RxDownloadManager {
   public void init(Context context, Retrofit retrofit) {
     serviceHelper = new ServiceHelper(context);
     downloadApi = retrofit.create(DownloadApi.class);
+  }
+
+  public Observable<?> addDownloadTask(final String key, String m3u8, String html) {
+
+    return Observable.merge(ParserUtils.m3u8Paser(downloadApi, m3u8, defPath),
+        ParserUtils.htmlPaser(downloadApi, html, defPath))
+        .toList()
+        .toObservable()
+        .flatMap(new Function<List<DownloadBean>, ObservableSource<?>>() {
+          @Override public ObservableSource<?> apply(@NonNull List<DownloadBean> downloadBeen)
+              throws Exception {
+            DownloadBundle downloadBundle = new DownloadBundle();
+            downloadBundle.setKey(key);
+            downloadBundle.setDownloadList(downloadBeen);
+            downloadBundle.setTotalSize(downloadBeen.size());
+            return addDownloadTask(new DownloadTask(downloadBundle));
+          }
+        });
   }
 
   public Observable<?> addDownloadTask(String url) {
@@ -69,8 +94,7 @@ public class RxDownloadManager {
     return serviceHelper.pause(key);
   }
 
-  public Observable<List<DownloadBundle>> getAllDownloadBundle(){
+  public Observable<List<DownloadBundle>> getAllDownloadBundle() {
     return serviceHelper.getAllDownloadBundle();
   }
-
 }

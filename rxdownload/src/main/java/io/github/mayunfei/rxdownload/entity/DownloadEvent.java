@@ -12,7 +12,7 @@ import static io.github.mayunfei.rxdownload.entity.DownloadStatus.QUEUE;
  */
 
 public class DownloadEvent {
-  private long totalSize;
+  private long totalSize = -1;
   private long completedSize;
   private int status = QUEUE;
 
