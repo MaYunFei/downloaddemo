@@ -15,10 +15,12 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
+import io.reactivex.Scheduler;
 import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +64,8 @@ public class RxDownloadManager {
             downloadBundle.setTotalSize(downloadBeen.size());
             return addDownloadTask(new DownloadTask(downloadBundle));
           }
-        });
+        })
+        .subscribeOn(Schedulers.io());
   }
 
   public Observable<?> addDownloadTask(String url) {
