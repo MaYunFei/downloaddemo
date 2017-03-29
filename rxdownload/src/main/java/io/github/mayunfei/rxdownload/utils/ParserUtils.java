@@ -91,6 +91,7 @@ public class ParserUtils {
                       .url(itemUrl)
                       .build());
                 }
+                emitter.onComplete();
               }
             });
           }

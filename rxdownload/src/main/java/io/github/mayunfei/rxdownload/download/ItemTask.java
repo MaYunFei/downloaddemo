@@ -129,7 +129,7 @@ public class ItemTask {
       }
     }, BackpressureStrategy.LATEST)
         //重试
-        .compose(RxUtils.<DownloadEvent>retry(bean.getUrl()));
+        .compose(RxUtils.<DownloadEvent>retry(bean, downloadDB));
   }
 
   /**
@@ -143,6 +143,7 @@ public class ItemTask {
       DownloadEvent downloadEvent = new DownloadEvent();
       ResponseBody body = response.body();
       downloadEvent.setTotalSize(body.contentLength());
+      L.i("fileeeeeeeeeeeeeeeeeee", name + "   " + downloadEvent.getTotalSize());
       File file = new File(path, name);
       sink = Okio.buffer(Okio.sink(file));
       long totalRead = 0;

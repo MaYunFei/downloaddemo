@@ -38,17 +38,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     ActivityCompat.requestPermissions(this,
         new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
-    disposable = RxDownloadManager.getInstance()
-        .getDownloadEvent("yunfei")
-        .subscribe(new Consumer<DownloadEvent>() {
-          @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
-            Log.i("******event******yunfei", downloadEvent.toString());
-          }
-        }, new Consumer<Throwable>() {
-          @Override public void accept(@NonNull Throwable throwable) throws Exception {
-            L.e(TAG, throwable.toString());
-          }
-        });
+    L.i("111111111111111111111");
+    //disposable = RxDownloadManager.getInstance()
+    //    .getDownloadEvent("yunfei")
+    //    .subscribe(new Consumer<DownloadEvent>() {
+    //      @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
+    //        Log.i("******event******yunfei", downloadEvent.toString());
+    //      }
+    //    }, new Consumer<Throwable>() {
+    //      @Override public void accept(@NonNull Throwable throwable) throws Exception {
+    //        L.e(TAG, throwable.toString());
+    //      }
+    //    });
     //rxDownloadManager.getDownloadEvent(
     //    "http://img.wdjimg.com/mms/icon/v1/8/10/1b26d9f0a258255b0431c03a21c0d108_512_512.png")
     //    .subscribe(new Consumer<DownloadEvent>() {
@@ -61,23 +62,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //      }
     //    });
     //
-    RxDownloadManager.getInstance()
-        .getAllDownloadBundle()
-        .subscribe(new Consumer<List<DownloadBundle>>() {
-          @Override public void accept(@NonNull List<DownloadBundle> downloadBundles)
-              throws Exception {
-            Observable.fromIterable(downloadBundles).subscribe(new Consumer<DownloadBundle>() {
-              @Override public void accept(@NonNull DownloadBundle downloadBundle)
-                  throws Exception {
-                L.i(TAG, downloadBundle.toString());
-              }
-            });
-          }
-        }, new Consumer<Throwable>() {
-          @Override public void accept(@NonNull Throwable throwable) throws Exception {
-
-          }
-        });
+    //RxDownloadManager.getInstance()
+    //    .getAllDownloadBundle()
+    //    .subscribe(new Consumer<List<DownloadBundle>>() {
+    //      @Override public void accept(@NonNull List<DownloadBundle> downloadBundles)
+    //          throws Exception {
+    //        Observable.fromIterable(downloadBundles).subscribe(new Consumer<DownloadBundle>() {
+    //          @Override public void accept(@NonNull DownloadBundle downloadBundle)
+    //              throws Exception {
+    //            L.i(TAG, downloadBundle.toString());
+    //          }
+    //        });
+    //      }
+    //    }, new Consumer<Throwable>() {
+    //      @Override public void accept(@NonNull Throwable throwable) throws Exception {
+    //
+    //      }
+    //    });
   }
 
   @Override public void onClick(View v) {
@@ -180,18 +181,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             "http://www.jianshu.com/p/94c433057440")
         .subscribe(new Consumer<Object>() {
           @Override public void accept(@NonNull Object o) throws Exception {
-
+            L.i("开始下载");
           }
         }, new Consumer<Throwable>() {
           @Override public void accept(@NonNull Throwable throwable) throws Exception {
-            L.i(TAG, throwable.toString());
+            L.e(TAG, throwable.toString());
           }
         });
   }
 
   @Override protected void onDestroy() {
     super.onDestroy();
-    if (!disposable.isDisposed()) {
+    if (disposable != null && !disposable.isDisposed()) {
       disposable.dispose();
     }
   }

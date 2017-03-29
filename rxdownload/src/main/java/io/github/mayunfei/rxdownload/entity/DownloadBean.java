@@ -11,6 +11,9 @@ import retrofit2.Retrofit;
 
 public class DownloadBean {
 
+  public static final int PRIORITY_NORMAL = 0;
+  public static final int PRIORITY_LOW = -1;
+
   public static final String TABLE_NAME = "DownloadBean";
   public static final String ID = "id";
   public static final String BUNDLE_ID = "bundleId";
@@ -19,6 +22,7 @@ public class DownloadBean {
   public static final String TOTAL_SIZE = "totalSize";
   public static final String COMPLETED_SIZE = "completedSize";
   public static final String URL = "url";
+  public static final String PRIORITY = "priority";
   public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
       + " ("
@@ -36,6 +40,8 @@ public class DownloadBean {
       + " LONG,"
       + URL
       + " TEXT,"
+      + PRIORITY
+      + " INTEGER, "
       + "FOREIGN KEY ("
       + BUNDLE_ID
       + ") REFERENCES "
@@ -44,17 +50,29 @@ public class DownloadBean {
       + DownloadBundle.ID
       + "))";
 
+  private int id;
+  private int bundleId;
+  private String fileName;
+  private String path;
+  private long totalSize = -1;
+  private long completedSize = 0;
+  private String url;
+
+  private int priority = PRIORITY_NORMAL; //优先级
+
   public DownloadBean() {
 
   }
 
   private DownloadBean(Builder builder) {
     setId(builder.id);
+    setBundleId(builder.bundleid);
     setFileName(builder.fileName);
     setPath(builder.path);
     setTotalSize(builder.totalSize);
     setCompletedSize(builder.completedSize);
     setUrl(builder.url);
+    setPriority(builder.priority);
   }
 
   public static ContentValues insert(DownloadBean downloadBean) {
@@ -65,6 +83,7 @@ public class DownloadBean {
     contentValues.put(TOTAL_SIZE, downloadBean.getTotalSize());
     contentValues.put(COMPLETED_SIZE, downloadBean.getCompletedSize());
     contentValues.put(URL, downloadBean.getUrl());
+    contentValues.put(PRIORITY, downloadBean.getPriority());
     return contentValues;
   }
 
@@ -75,28 +94,24 @@ public class DownloadBean {
   }
 
   public static DownloadBean getDownloadBean(Cursor cursor) {
+    int id = DBHelper.getInt(cursor, ID);
     int bundleId = DBHelper.getInt(cursor, BUNDLE_ID);
     String fileName = DBHelper.getString(cursor, FILENAME);
     String path = DBHelper.getString(cursor, PATH);
     long totalSize = DBHelper.getLong(cursor, TOTAL_SIZE);
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     String url = DBHelper.getString(cursor, URL);
-    return newBuilder().id(bundleId)
+    int priority = DBHelper.getInt(cursor,PRIORITY);
+    return newBuilder().id(id)
+        .bundleid(bundleId)
         .fileName(fileName)
         .path(path)
         .totalSize(totalSize)
         .completedSize(completedSize)
         .url(url)
+        .priority(priority)
         .build();
   }
-
-  private int id;
-  private int bundleId;
-  private String fileName;
-  private String path;
-  private long totalSize = -1;
-  private long completedSize = 0;
-  private String url;
 
   public static Builder newBuilder() {
     return new Builder();
@@ -158,6 +173,14 @@ public class DownloadBean {
     this.url = url;
   }
 
+  public int getPriority() {
+    return priority;
+  }
+
+  public void setPriority(int priority) {
+    this.priority = priority;
+  }
+
   @Override public String toString() {
     return "DownloadBean{"
         + "id="
@@ -177,18 +200,27 @@ public class DownloadBean {
         + ", url='"
         + url
         + '\''
+        + ", priority="
+        + priority
         + '}';
   }
 
   public static final class Builder {
     private int id;
+    private int bundleid;
     private String fileName;
     private String path;
     private long totalSize = -1;
     private long completedSize = 0;
     private String url;
+    private int priority = PRIORITY_NORMAL;
 
     private Builder() {
+    }
+
+    public Builder bundleid(int val) {
+      bundleid = val;
+      return this;
     }
 
     public Builder id(int val) {
@@ -218,6 +250,10 @@ public class DownloadBean {
 
     public Builder url(String val) {
       url = val;
+      return this;
+    }
+    public Builder priority(int val) {
+      priority = val;
       return this;
     }
 

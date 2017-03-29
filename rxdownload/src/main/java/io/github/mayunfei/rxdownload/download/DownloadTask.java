@@ -5,48 +5,21 @@ import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.github.mayunfei.rxdownload.entity.DownloadStatus;
-import io.github.mayunfei.rxdownload.utils.IOUtils;
 import io.github.mayunfei.rxdownload.utils.L;
-import io.github.mayunfei.rxdownload.utils.RxUtils;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Emitter;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.FlowableOnSubscribe;
-import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.processors.BehaviorProcessor;
 import io.reactivex.processors.FlowableProcessor;
-import io.reactivex.processors.PublishProcessor;
-import io.reactivex.schedulers.Schedulers;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import okhttp3.ResponseBody;
-import okio.BufferedSink;
-import okio.BufferedSource;
-import okio.Okio;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
-import retrofit2.Response;
 
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
 import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
-import static io.github.mayunfei.rxdownload.utils.RxUtils.retry;
 
 /**
  * 真正下载在这里
@@ -228,6 +201,7 @@ public class DownloadTask {
 
           processorEvent.onNext(event);
         }
+        isCancel = true;
         return true;
       }
       return false;

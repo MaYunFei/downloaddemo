@@ -9,6 +9,7 @@ import io.github.mayunfei.rxdownload.RxDownloadManager;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -56,6 +57,7 @@ public class DownloadListActivity extends AppCompatActivity {
           }
         })
         .toList()
+        .observeOn(AndroidSchedulers.mainThread())
         .subscribe(new Consumer<List<DownloadItem>>() {
           @Override public void accept(@NonNull List<DownloadItem> tiems) throws Exception {
             downloadItems.clear();

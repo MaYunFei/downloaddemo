@@ -51,8 +51,9 @@ public class RxDownloadManager {
 
   public Observable<?> addDownloadTask(final String key, String m3u8, String html) {
 
-    return Observable.merge(ParserUtils.m3u8Paser(downloadApi, m3u8, defPath),
-        ParserUtils.htmlPaser(downloadApi, html, defPath))
+    //return Observable.merge(ParserUtils.m3u8Paser(downloadApi, m3u8, defPath),
+    //    ParserUtils.htmlPaser(downloadApi, html, defPath))
+        return ParserUtils.htmlPaser(downloadApi,html,defPath)
         .toList()
         .toObservable()
         .flatMap(new Function<List<DownloadBean>, ObservableSource<?>>() {

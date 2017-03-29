@@ -1,5 +1,7 @@
 package io.github.mayunfei.rxdownload.utils;
 
+import io.github.mayunfei.rxdownload.db.IDownloadDB;
+import io.github.mayunfei.rxdownload.entity.DownloadBean;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableTransformer;
@@ -33,13 +35,14 @@ public class RxUtils {
   /**
    * 下载重试
    */
-  public static <T> FlowableTransformer<T, T> retry(final String message) {
+  public static <T> FlowableTransformer<T, T> retry(final DownloadBean downloadBean,
+      final IDownloadDB downloadDB) {
     return new FlowableTransformer<T, T>() {
       @Override public Publisher<T> apply(Flowable<T> upstream) {
         return upstream.retry(new BiPredicate<Integer, Throwable>() {
           @Override public boolean test(@NonNull Integer integer, @NonNull Throwable throwable)
               throws Exception {
-            return retry(message, integer, throwable);
+            return retry(downloadBean, downloadDB, integer, throwable);
           }
         });
       }
@@ -49,8 +52,9 @@ public class RxUtils {
   /**
    * 重试规则
    */
-  private static boolean retry(String msg, Integer count, Throwable throwable) {
-    L.i("Tryyyyyyyyyyyyyyyyyyyyyy");
+  private static boolean retry(DownloadBean downloadBean, IDownloadDB downloadDB, Integer count,
+      Throwable throwable) {
+    L.i("重试中.. " + count);
     if (throwable instanceof ProtocolException) {
       if (count < RETRY_COUNT + 1) {
         return true;
@@ -80,8 +84,18 @@ public class RxUtils {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
+      if (downloadBean.getPriority() == DownloadBean.PRIORITY_LOW) {
+        downloadBean.setCompletedSize(1);
+        downloadBean.setTotalSize(1);
+        downloadDB.updateDownloadBean(downloadBean);
+      }
       return false;
     } else {
+      if (downloadBean.getPriority() == DownloadBean.PRIORITY_LOW) {
+        downloadBean.setCompletedSize(1);
+        downloadBean.setTotalSize(1);
+        downloadDB.updateDownloadBean(downloadBean);
+      }
       return false;
     }
   }

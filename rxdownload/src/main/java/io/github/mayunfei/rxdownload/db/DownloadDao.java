@@ -78,7 +78,6 @@ public class DownloadDao implements IDownloadDB {
     try {
       while (cursor.moveToNext()) {
         DownloadBundle downloadBundle = DownloadBundle.getDownloadBundle(cursor);
-        downloadBundle.setDownloadList(getDownloadBeans(downloadBundle.getId()));
         list.add(downloadBundle);
       }
     } finally {
@@ -101,7 +100,9 @@ public class DownloadDao implements IDownloadDB {
         new String[] { key });
     try {
       if (cursor.moveToFirst()) {
-        return DownloadBundle.getDownloadBundle(cursor);
+        DownloadBundle downloadBundle = DownloadBundle.getDownloadBundle(cursor);
+        downloadBundle.setDownloadList(getDownloadBeans(downloadBundle.getId()));
+        return downloadBundle;
       }
     } finally {
       cursor.close();

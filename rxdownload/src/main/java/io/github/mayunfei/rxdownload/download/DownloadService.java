@@ -69,7 +69,7 @@ public class DownloadService extends Service {
 
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(2);
+      semaphore = new Semaphore(5);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -100,6 +100,7 @@ public class DownloadService extends Service {
       }
     }, new Consumer<Throwable>() {
       @Override public void accept(Throwable throwable) throws Exception {
+        L.e(TAG, throwable + "");
       }
     });
   }
