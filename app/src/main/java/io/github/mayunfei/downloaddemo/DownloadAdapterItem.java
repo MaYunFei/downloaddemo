@@ -30,6 +30,7 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
   AppCompatCheckBox checkBox;
   View rootView;
   private Disposable disposable;
+  private DownloadControl downloadControl;
 
   @Override public int getLayoutResId() {
     return R.layout.downloaditem;
@@ -41,13 +42,14 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
     progress = (ContentLoadingProgressBar) view.findViewById(R.id.progress);
     checkBox = (AppCompatCheckBox) view.findViewById(R.id.checkbox);
     rootView = view;
+    downloadControl = new DownloadControl(btn_status);
   }
 
   @Override public void setViews() {
 
   }
 
-  @Override public void handleData(DownloadItem downloadItem, int i) {
+  @Override public void handleData(final DownloadItem downloadItem, int i) {
     disposable = RxDownloadManager.getInstance()
         .getDownloadEvent(downloadItem.getDownloadBundle().getKey())
         .subscribe(new Consumer<DownloadEvent>() {
@@ -70,7 +72,43 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
                 status = "完成";
                 break;
             }
+            downloadControl.setStatus(downloadEvent.getStatus());
 
+            btn_status.setOnClickListener(new View.OnClickListener() {
+              @Override public void onClick(View v) {
+                downloadControl.handleClick(new DownloadControl.Callback() {
+                  @Override public void startDownload() {
+                    RxDownloadManager.getInstance()
+                        .addDownloadTask(downloadItem.getDownloadBundle())
+                        .subscribe(new Consumer<Object>() {
+                          @Override public void accept(@NonNull Object o) throws Exception {
+
+                          }
+                        });
+                  }
+
+                  @Override public void pauseDownload() {
+                    RxDownloadManager.getInstance()
+                        .pause(downloadItem.getDownloadBundle().getKey())
+                        .subscribe(new Consumer<Object>() {
+                          @Override public void accept(@NonNull Object o) throws Exception {
+
+                          }
+                        });
+                  }
+
+                  @Override public void delete() {
+                    RxDownloadManager.getInstance()
+                        .delete(downloadItem.getDownloadBundle().getKey())
+                        .subscribe(new Consumer<Object>() {
+                          @Override public void accept(@NonNull Object o) throws Exception {
+
+                          }
+                        });
+                  }
+                });
+              }
+            });
             progress.setMax(Long.valueOf(downloadEvent.getTotalSize()).intValue());
             progress.setProgress(Long.valueOf(downloadEvent.getCompletedSize()).intValue());
             tv_key.setText(status);
@@ -80,7 +118,6 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
 
           }
         });
-    disposable.dispose();
 
     downloadItem.setDisposable(disposable);
   }

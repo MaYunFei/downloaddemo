@@ -188,6 +188,8 @@ public class DownloadTask {
 
           downloadBundle.setCompletedSize(completeSize.longValue());
           downloadBundle.setStatus(FINISH);
+
+
           downloadDB.updateDownloadBundle(downloadBundle);
 
           event.setCompletedSize(completeSize.longValue());

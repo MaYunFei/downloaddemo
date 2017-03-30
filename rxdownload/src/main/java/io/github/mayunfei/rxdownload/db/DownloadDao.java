@@ -20,7 +20,7 @@ import java.util.List;
  */
 
 public class DownloadDao implements IDownloadDB {
-  private static final String TAG = "SQLLLLLLLLLL";
+  private static final String TAG = "DownloadDao";
 
   private volatile static DownloadDao singleton;
   private SQLiteHelper sqLiteHelper;
@@ -118,6 +118,12 @@ public class DownloadDao implements IDownloadDB {
     contentValues.put(DownloadBean.IS_FINISHED, true);
     getWritableDatabase().update(DownloadBean.TABLE_NAME, contentValues, DownloadBean.ID + "=?",
         new String[] { beanId + "" });
+  }
+
+  @Override public void delete(String key) {
+    getWritableDatabase().execSQL("PRAGMA foreign_keys=ON");
+    getWritableDatabase().delete(DownloadBundle.TABLE_NAME, DownloadBundle.KEY + "=?",
+        new String[] { key });
   }
 
   private List<DownloadBean> getDownloadBeans(int bundleId) {

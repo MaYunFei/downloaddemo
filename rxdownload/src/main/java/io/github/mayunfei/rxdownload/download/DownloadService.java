@@ -8,6 +8,7 @@ import io.github.mayunfei.rxdownload.db.DownloadDao;
 import io.github.mayunfei.rxdownload.db.IDownloadDB;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
+import io.github.mayunfei.rxdownload.entity.DownloadStatus;
 import io.github.mayunfei.rxdownload.utils.L;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
@@ -29,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
+import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DELETED;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.ERROR;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.FINISH;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
@@ -81,7 +83,7 @@ public class DownloadService extends Service {
 
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(5);
+      semaphore = new Semaphore(10);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -162,6 +164,8 @@ public class DownloadService extends Service {
         downloadEvent.setStatus(ERROR);
         downloadEvent.setCompletedSize(0);
         downloadEvent.setTotalSize(100);
+      } else if (downloadEvent.getStatus() == FINISH) {
+        downloadEvent.setStatus(FINISH);
       } else {
         downloadEvent.setStatus(PAUSE);
       }
@@ -206,5 +210,16 @@ public class DownloadService extends Service {
     for (DownloadTask task : tasks) {
       addTask(task);
     }
+  }
+
+  public void delete(String key) {
+    DownloadTask task = taskMap.get(key);
+    if (task != null && !task.isFinished() && !task.isCancel()) {
+      task.pause();
+    }
+    mDownloadDB.delete(key);
+    DownloadEvent downloadEvent = new DownloadEvent();
+    downloadEvent.setStatus(DELETED);
+    createProcessor(key, processorMap).onNext(downloadEvent);
   }
 }

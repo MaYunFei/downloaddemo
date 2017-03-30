@@ -133,6 +133,14 @@ public class ServiceHelper {
         });
   }
 
+  public Observable<?> delete(final String key) {
+    return createGeneralObservable(new GeneralObservableCallback() {
+      @Override public void call() throws Exception {
+        downloadService.delete(key);
+      }
+    });
+  }
+
   public interface GeneralObservableCallback {
     void call() throws Exception;
   }

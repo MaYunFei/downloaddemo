@@ -85,6 +85,11 @@ public class RxDownloadManager {
     return addDownloadTask(new DownloadTask(downloadBundle));
   }
 
+  public Observable<?> addDownloadTask(DownloadBundle downloadBundle){
+    DownloadTask task = new DownloadTask(downloadBundle);
+    return addDownloadTask(task);
+  }
+
   public Observable<?> addDownloadTask(final DownloadTask downloadTask) {
     downloadTask.init(downloadApi);
     return serviceHelper.addTask(downloadTask).observeOn(AndroidSchedulers.mainThread());
@@ -96,6 +101,10 @@ public class RxDownloadManager {
 
   public Observable<?> pause(String key) {
     return serviceHelper.pause(key);
+  }
+
+  public Observable<?> delete(String key) {
+    return serviceHelper.delete(key);
   }
 
   public Observable<List<DownloadBundle>> getAllDownloadBundle() {

@@ -54,7 +54,7 @@ public class DownloadBean {
       + DownloadBundle.TABLE_NAME
       + "("
       + DownloadBundle.ID
-      + "))";
+      + ") ON DELETE CASCADE )"; //开启级联删除
 
   private int id;
   private int bundleId;

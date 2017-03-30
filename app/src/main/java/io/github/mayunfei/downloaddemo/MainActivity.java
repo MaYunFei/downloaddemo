@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         download();
         break;
       case R.id.btn_task2:
+        download2();
         break;
       case R.id.btn_task3:
         break;
@@ -57,8 +58,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
   }
 
-  private void download() {
-
+  private void download2() {
     RxDownloadManager.getInstance()
         .addDownloadTask("m3u80",
             "https://md.dongaocloud.com/2b4f/2b52/5b3/81e/61e08244fcd53892b90031ee873de2b2/video.m3u8",
@@ -72,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             L.e(TAG, throwable.toString());
           }
         });
+  }
+
+  private void download() {
+
     RxDownloadManager.getInstance()
         .addDownloadTask("m3u81",
             "https://md.dongaocloud.com/2b50/2b91/713/82b/b4c2f6282aabdcf936c15871fcc47d3b/video.m3u8",

@@ -14,4 +14,5 @@ public class DownloadStatus {
   public static final int QUEUE = 3;
   public static final int FINISH = 4;
   public static final int ERROR = 5;
+  public static final int DELETED = 6;
 }
