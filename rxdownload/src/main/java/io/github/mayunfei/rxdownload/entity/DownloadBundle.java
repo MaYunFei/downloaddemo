@@ -13,6 +13,7 @@ import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.QUEUE;
 
 /**
+ * 下载组合
  * Created by yunfei on 17-3-25.
  */
 

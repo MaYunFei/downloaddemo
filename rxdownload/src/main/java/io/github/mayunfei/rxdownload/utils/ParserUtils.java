@@ -36,7 +36,7 @@ public class ParserUtils {
   /**
    * 解析html
    */
-  public static Observable<DownloadBean> htmlPaser(DownloadApi downloadApi, final String url,
+  public static Observable<DownloadBean> htmlParser(DownloadApi downloadApi, final String url,
       final String path) {
     return getResponseBody(downloadApi, url).flatMap(
         new Function<ResponseBody, ObservableSource<DownloadBean>>() {
@@ -120,7 +120,7 @@ public class ParserUtils {
         });
   }
 
-  public static Observable<DownloadBean> m3u8Paser(DownloadApi downloadApi, final String url,
+  public static Observable<DownloadBean> m3u8Parser(DownloadApi downloadApi, final String url,
       final String path) {
 
     return getResponseBody(downloadApi, url).flatMap(

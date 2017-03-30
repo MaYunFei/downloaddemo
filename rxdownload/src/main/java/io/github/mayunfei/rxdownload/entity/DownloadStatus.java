@@ -1,6 +1,7 @@
 package io.github.mayunfei.rxdownload.entity;
 
 /**
+ * 下载标记
  * Created by yunfei on 17-3-25.
  */
 

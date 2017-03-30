@@ -6,6 +6,7 @@ import io.github.mayunfei.rxdownload.db.DBHelper;
 import retrofit2.Retrofit;
 
 /**
+ * 基础的下载信息
  * Created by yunfei on 17-3-25.
  */
 
@@ -91,7 +92,7 @@ public class DownloadBean {
     contentValues.put(COMPLETED_SIZE, downloadBean.getCompletedSize());
     contentValues.put(URL, downloadBean.getUrl());
     contentValues.put(PRIORITY, downloadBean.getPriority());
-    contentValues.put(IS_FINISHED,downloadBean.isFinished());
+    contentValues.put(IS_FINISHED, downloadBean.isFinished());
     return contentValues;
   }
 
@@ -110,7 +111,7 @@ public class DownloadBean {
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     String url = DBHelper.getString(cursor, URL);
     int priority = DBHelper.getInt(cursor, PRIORITY);
-    boolean isFinished = DBHelper.getBoolean(cursor,IS_FINISHED);
+    boolean isFinished = DBHelper.getBoolean(cursor, IS_FINISHED);
     return newBuilder().id(id)
         .bundleid(bundleId)
         .fileName(fileName)

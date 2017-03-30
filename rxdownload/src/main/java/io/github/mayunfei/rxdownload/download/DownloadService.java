@@ -36,7 +36,7 @@ import static io.github.mayunfei.rxdownload.entity.DownloadStatus.QUEUE;
 import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
 
 public class DownloadService extends Service {
-  private static final String TAG = "2222222222222222";
+  private static final String TAG = "Download Service";
 
   public static final String INTENT_KEY = "io.github.mayunfei.rxdownload.max_download_number";
   private DownloadBinder mBinder;

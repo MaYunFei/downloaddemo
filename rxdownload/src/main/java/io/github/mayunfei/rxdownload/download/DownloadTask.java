@@ -22,7 +22,7 @@ import static io.github.mayunfei.rxdownload.entity.DownloadStatus.PAUSE;
 import static io.github.mayunfei.rxdownload.utils.RxUtils.createProcessor;
 
 /**
- * 真正下载在这里
+ * Item 下载整合
  * Created by yunfei on 17-3-25.
  */
 

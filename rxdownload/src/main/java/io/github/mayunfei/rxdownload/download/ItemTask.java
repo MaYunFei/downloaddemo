@@ -32,13 +32,14 @@ import retrofit2.Response;
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
 
 /**
+ * 真正的文件下载
  * Created by mayunfei on 17-3-27.
  */
 
 public class ItemTask {
 
   private static final long DOWNLOAD_CHUNK_SIZE = 2048;
-  private static final String TAG = "11111111111";
+  private static final String TAG = "ItemTask";
   private DownloadApi mDownloadApi;
   private IDownloadDB downloadDB;
   //用于取消
