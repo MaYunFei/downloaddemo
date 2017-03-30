@@ -115,6 +115,10 @@ public class ItemTask {
             downloadBean.setTotalSize(downloadEvent.getTotalSize());
             downloadDB.updateDownloadBean(downloadBean);
           }
+        }).doOnComplete(new Action() {
+          @Override public void run() throws Exception {
+            downloadDB.setBeanFinished(downloadBean.getId());
+          }
         });
   }
 

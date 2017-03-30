@@ -1,5 +1,6 @@
 package io.github.mayunfei.rxdownload.db;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -109,6 +110,13 @@ public class DownloadDao implements IDownloadDB {
     }
 
     return null;
+  }
+
+  @Override public void setBeanFinished(int beanId) {
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(DownloadBean.IS_FINISHED, true);
+    getWritableDatabase().update(DownloadBean.TABLE_NAME, contentValues, DownloadBean.ID + "=?",
+        new String[] { beanId + "" });
   }
 
   private List<DownloadBean> getDownloadBeans(int bundleId) {

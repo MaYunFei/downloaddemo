@@ -39,4 +39,6 @@ public interface IDownloadDB {
   void pauseAll();
 
   DownloadBundle getDownloadBundle(String key);
+
+  void setBeanFinished(int beanId);
 }

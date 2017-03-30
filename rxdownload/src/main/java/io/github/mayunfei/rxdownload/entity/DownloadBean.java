@@ -23,6 +23,7 @@ public class DownloadBean {
   public static final String COMPLETED_SIZE = "completedSize";
   public static final String URL = "url";
   public static final String PRIORITY = "priority";
+  public static final String IS_FINISHED = "is_finished";
   public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
       + " ("
@@ -42,6 +43,10 @@ public class DownloadBean {
       + " TEXT,"
       + PRIORITY
       + " INTEGER, "
+      + IS_FINISHED
+      + " BOOLEAN NOT NULL CHECK ("
+      + IS_FINISHED
+      + " IN (0,1)),"
       + "FOREIGN KEY ("
       + BUNDLE_ID
       + ") REFERENCES "
@@ -57,6 +62,7 @@ public class DownloadBean {
   private long totalSize = -1;
   private long completedSize = 0;
   private String url;
+  private boolean isFinished = false;
 
   private int priority = PRIORITY_NORMAL; //优先级
 
@@ -73,6 +79,7 @@ public class DownloadBean {
     setCompletedSize(builder.completedSize);
     setUrl(builder.url);
     setPriority(builder.priority);
+    setFinished(builder.isFinished);
   }
 
   public static ContentValues insert(DownloadBean downloadBean) {
@@ -84,6 +91,7 @@ public class DownloadBean {
     contentValues.put(COMPLETED_SIZE, downloadBean.getCompletedSize());
     contentValues.put(URL, downloadBean.getUrl());
     contentValues.put(PRIORITY, downloadBean.getPriority());
+    contentValues.put(IS_FINISHED,downloadBean.isFinished());
     return contentValues;
   }
 
@@ -101,7 +109,8 @@ public class DownloadBean {
     long totalSize = DBHelper.getLong(cursor, TOTAL_SIZE);
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     String url = DBHelper.getString(cursor, URL);
-    int priority = DBHelper.getInt(cursor,PRIORITY);
+    int priority = DBHelper.getInt(cursor, PRIORITY);
+    boolean isFinished = DBHelper.getBoolean(cursor,IS_FINISHED);
     return newBuilder().id(id)
         .bundleid(bundleId)
         .fileName(fileName)
@@ -110,6 +119,7 @@ public class DownloadBean {
         .completedSize(completedSize)
         .url(url)
         .priority(priority)
+        .isFinished(isFinished)
         .build();
   }
 
@@ -181,6 +191,14 @@ public class DownloadBean {
     this.priority = priority;
   }
 
+  public boolean isFinished() {
+    return isFinished;
+  }
+
+  public void setFinished(boolean finished) {
+    isFinished = finished;
+  }
+
   @Override public String toString() {
     return "DownloadBean{"
         + "id="
@@ -214,6 +232,7 @@ public class DownloadBean {
     private long completedSize = 0;
     private String url;
     private int priority = PRIORITY_NORMAL;
+    private boolean isFinished = false;
 
     private Builder() {
     }
@@ -252,8 +271,14 @@ public class DownloadBean {
       url = val;
       return this;
     }
+
     public Builder priority(int val) {
       priority = val;
+      return this;
+    }
+
+    public Builder isFinished(boolean val) {
+      isFinished = val;
       return this;
     }
 
