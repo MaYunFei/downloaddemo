@@ -111,6 +111,7 @@ public class ItemTask {
             return save(downloadBean, response);
           }
         })
+        .compose(RxUtils.<DownloadEvent>retry(downloadBean, downloadDB))
         .doOnNext(new Consumer<DownloadEvent>() {
           @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
             downloadBean.setCompletedSize(downloadEvent.getCompletedSize());
@@ -138,9 +139,7 @@ public class ItemTask {
           saveFile(emitter, response, bean.getPath(), bean.getFileName());
         }
       }
-    }, BackpressureStrategy.LATEST)
-        //重试
-        .compose(RxUtils.<DownloadEvent>retry(bean, downloadDB));
+    }, BackpressureStrategy.LATEST);
   }
 
   /**

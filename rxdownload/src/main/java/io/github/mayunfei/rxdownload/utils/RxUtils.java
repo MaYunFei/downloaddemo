@@ -74,12 +74,12 @@ public class RxUtils {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return updateFinished(downloadBean, downloadDB);
+      return false;
     } else if (throwable instanceof ConnectException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return updateFinished(downloadBean, downloadDB);
+      return false;
     } else if (throwable instanceof SocketException) {
       if (count < RETRY_COUNT + 1) {
         return true;
