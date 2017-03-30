@@ -26,6 +26,10 @@ public class DownloadBundle {
   public static final String STATUS = "status";
   //分类存储
   public static final String TYPE = "type";
+  public static final String ARGS0 = "args0";
+  public static final String ARGS1 = "args1";
+  public static final String ARGS2 = "args2";
+  public static final String ARGS3 = "args3";
 
   public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
@@ -40,6 +44,14 @@ public class DownloadBundle {
       + " LONG,"
       + STATUS
       + " INTEGER,"
+      + ARGS0
+      + " TEXT,"
+      + ARGS1
+      + " TEXT,"
+      + ARGS2
+      + " TEXT,"
+      + ARGS3
+      + " TEXT,"
       + TYPE
       + " INTEGER"
       + ")";
@@ -51,6 +63,10 @@ public class DownloadBundle {
     contentValues.put(COMPLETED_SIZE, downloadBundle.getCompletedSize());
     contentValues.put(STATUS, downloadBundle.getStatus());
     contentValues.put(TYPE, downloadBundle.getType());
+    contentValues.put(ARGS0, downloadBundle.getArgs0());
+    contentValues.put(ARGS1, downloadBundle.getArgs1());
+    contentValues.put(ARGS2, downloadBundle.getArgs2());
+    contentValues.put(ARGS3, downloadBundle.getArgs3());
     return contentValues;
   }
 
@@ -61,6 +77,10 @@ public class DownloadBundle {
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     int status = DBHelper.getInt(cursor, STATUS);
     int type = DBHelper.getInt(cursor, TYPE);
+    String arg0 = DBHelper.getString(cursor,ARGS0);
+    String arg1 = DBHelper.getString(cursor,ARGS1);
+    String arg2 = DBHelper.getString(cursor,ARGS2);
+    String arg3 = DBHelper.getString(cursor,ARGS3);
     DownloadBundle downloadBundle = new DownloadBundle();
     downloadBundle.setId(id);
     downloadBundle.setKey(key);
@@ -68,6 +88,10 @@ public class DownloadBundle {
     downloadBundle.setCompletedSize(completedSize);
     downloadBundle.setStatus(status);
     downloadBundle.setType(type);
+    downloadBundle.setArgs0(arg0);
+    downloadBundle.setArgs0(arg1);
+    downloadBundle.setArgs0(arg2);
+    downloadBundle.setArgs0(arg3);
     return downloadBundle;
   }
 
@@ -89,6 +113,10 @@ public class DownloadBundle {
   private long completedSize;
   private int status;
   private int type;
+  private String args0;
+  private String args1;
+  private String args2;
+  private String args3;
   private List<DownloadBean> downloadList;
 
   public int getId() {
@@ -137,6 +165,38 @@ public class DownloadBundle {
 
   public void setType(int type) {
     this.type = type;
+  }
+
+  public String getArgs0() {
+    return args0;
+  }
+
+  public void setArgs0(String args0) {
+    this.args0 = args0;
+  }
+
+  public String getArgs1() {
+    return args1;
+  }
+
+  public void setArgs1(String args1) {
+    this.args1 = args1;
+  }
+
+  public String getArgs2() {
+    return args2;
+  }
+
+  public void setArgs2(String args2) {
+    this.args2 = args2;
+  }
+
+  public String getArgs3() {
+    return args3;
+  }
+
+  public void setArgs3(String args3) {
+    this.args3 = args3;
   }
 
   public List<DownloadBean> getDownloadList() {

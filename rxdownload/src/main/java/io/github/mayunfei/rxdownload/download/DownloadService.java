@@ -39,11 +39,23 @@ public class DownloadService extends Service {
   private static final String TAG = "Download Service";
 
   public static final String INTENT_KEY = "io.github.mayunfei.rxdownload.max_download_number";
-  private DownloadBinder mBinder;
 
+  private DownloadBinder mBinder;
+  /**
+   * 下载队列
+   */
   private BlockingQueue<DownloadTask> downloadQueue;
+  /**
+   * 下载任务
+   */
   private Map<String, DownloadTask> taskMap;
+  /**
+   * 缓存
+   */
   private Map<String, FlowableProcessor<DownloadEvent>> processorMap;
+  /**
+   * 数据库
+   */
   private IDownloadDB mDownloadDB;
   //控制线程的信号量
   private Semaphore semaphore;
@@ -112,15 +124,19 @@ public class DownloadService extends Service {
   }
 
   public void addTask(DownloadTask downloadTask) throws InterruptedException {
+    //先判断 任务栈 TODO
     DownloadEvent downloadEvent = mDownloadDB.selectBundleStatus(downloadTask.getKey());
     if (downloadEvent.getStatus() == FINISH) {
       createProcessor(downloadTask.getKey(), processorMap).onNext(downloadEvent);
     } else {
       //初始化
       DownloadTask task = taskMap.get(downloadTask.getKey());
+
+      //有任务已经在运行
       if (task != null && !task.isCancel()) {
         return;
       }
+
       downloadTask.init(taskMap, processorMap, mDownloadDB);
       downloadTask.insertOrUpdate();
       downloadEvent.setStatus(QUEUE);
@@ -158,6 +174,9 @@ public class DownloadService extends Service {
   @Override public void onDestroy() {
     L.i(TAG, "onDestroy");
     mDownloadDB.closeDataBase();
+    if (disposable != null && !disposable.isDisposed()) {
+      disposable.dispose();
+    }
     super.onDestroy();
   }
 

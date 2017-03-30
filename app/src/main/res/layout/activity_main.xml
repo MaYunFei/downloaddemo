@@ -8,28 +8,35 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="io.github.mayunfei.downloaddemo.MainActivity"
+
     >
   <Button
-      android:id="@+id/btn"
+      android:id="@+id/btn_task1"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="开始"
+      android:text="task1"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintLeft_toLeftOf="parent"
       app:layout_constraintRight_toRightOf="parent"
       app:layout_constraintTop_toTopOf="parent"
       />
   <Button
-      android:id="@+id/btn_pause"
+      android:id="@+id/btn_task2"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="暂停"
+      android:text="task2"
       />
   <Button
-      android:id="@+id/btn_list"
+      android:id="@+id/btn_task3"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="跳转"
+      android:text="task3"
+      />
+  <Button
+      android:id="@+id/btn_gotolist"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="下载列表"
       />
 
 </LinearLayout>

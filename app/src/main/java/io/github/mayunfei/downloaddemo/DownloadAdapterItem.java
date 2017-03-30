@@ -29,6 +29,7 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
   ContentLoadingProgressBar progress;
   AppCompatCheckBox checkBox;
   View rootView;
+  private Disposable disposable;
 
   @Override public int getLayoutResId() {
     return R.layout.downloaditem;
@@ -47,7 +48,7 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
   }
 
   @Override public void handleData(DownloadItem downloadItem, int i) {
-    Disposable disposable = RxDownloadManager.getInstance()
+    disposable = RxDownloadManager.getInstance()
         .getDownloadEvent(downloadItem.getDownloadBundle().getKey())
         .subscribe(new Consumer<DownloadEvent>() {
           @Override public void accept(@NonNull DownloadEvent downloadEvent) throws Exception {
@@ -69,6 +70,7 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
                 status = "完成";
                 break;
             }
+
             progress.setMax(Long.valueOf(downloadEvent.getTotalSize()).intValue());
             progress.setProgress(Long.valueOf(downloadEvent.getCompletedSize()).intValue());
             tv_key.setText(status);
@@ -78,6 +80,7 @@ public class DownloadAdapterItem implements AdapterItem<DownloadItem> {
 
           }
         });
+    disposable.dispose();
 
     downloadItem.setDisposable(disposable);
   }

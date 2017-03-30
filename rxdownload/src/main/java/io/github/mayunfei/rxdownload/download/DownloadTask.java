@@ -69,7 +69,7 @@ public class DownloadTask {
       return;
     }
     //TODO 判断是否正确
-    int unDownloadSize = downloadList.size();
+    //int unDownloadSize = downloadList.size();
 
     completeSize = new AtomicLong(downloadBundle.getCompletedSize());
     failSize = new AtomicLong(0);
@@ -92,7 +92,7 @@ public class DownloadTask {
   private List<DownloadBean> getUnFinished(List<DownloadBean> downloadList) {
     List<DownloadBean> unDownload = new ArrayList<>();
     for (DownloadBean bean : downloadList) {
-      if (bean.getTotalSize() != bean.getCompletedSize()) {
+      if (!bean.isFinished()) {
         unDownload.add(bean);
       }
     }
@@ -170,11 +170,14 @@ public class DownloadTask {
       L.i("onComplete----------" + completeSize.longValue() + "----------------");
 
       if (!checkFinished()) {
+
         downloadBundle.setCompletedSize(completeSize.longValue());
         downloadBundle.setStatus(DOWNLOADING);
+
         event.setCompletedSize(completeSize.longValue());
-        downloadDB.updateDownloadBundle(downloadBundle);
         event.setStatus(DOWNLOADING);
+
+        downloadDB.updateDownloadBundle(downloadBundle);
         processorEvent.onNext(event);
       }
     }
