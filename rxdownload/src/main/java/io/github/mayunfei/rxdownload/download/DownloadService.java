@@ -124,6 +124,7 @@ public class DownloadService extends Service {
       downloadTask.init(taskMap, processorMap, mDownloadDB);
       downloadTask.insertOrUpdate();
       downloadEvent.setStatus(QUEUE);
+      createProcessor(downloadTask.getKey(), processorMap).onNext(downloadEvent);
       downloadQueue.put(downloadTask);
     }
   }

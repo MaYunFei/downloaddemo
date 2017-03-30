@@ -113,6 +113,7 @@ public class DownloadDao implements IDownloadDB {
   }
 
   @Override public void setBeanFinished(int beanId) {
+    L.i(TAG, "setBeanFinished \n" + beanId);
     ContentValues contentValues = new ContentValues();
     contentValues.put(DownloadBean.IS_FINISHED, true);
     getWritableDatabase().update(DownloadBean.TABLE_NAME, contentValues, DownloadBean.ID + "=?",

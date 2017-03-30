@@ -46,7 +46,7 @@ public class ParserUtils {
             return Observable.create(new ObservableOnSubscribe<DownloadBean>() {
               @Override public void subscribe(ObservableEmitter<DownloadBean> emitter)
                   throws Exception {
-                String childPath = childPath(path,LECTURE_PATH);
+                String childPath = childPath(path, LECTURE_PATH);
 
                 String html = responseBody.string();
                 if (!saveFile(FileUtils.getFileNameFromUrl(url), childPath, html)) {
@@ -89,6 +89,7 @@ public class ParserUtils {
                       .fileName(FileUtils.getFileNameFromUrl(itemUrl))
                       .path(childPath)
                       .url(itemUrl)
+                      .priority(DownloadBean.PRIORITY_LOW)
                       .build());
                 }
                 emitter.onComplete();
@@ -130,7 +131,7 @@ public class ParserUtils {
             return Observable.create(new ObservableOnSubscribe<DownloadBean>() {
               @Override public void subscribe(ObservableEmitter<DownloadBean> emitter)
                   throws Exception {
-                String childPath = childPath(path,M3U8_PATH);
+                String childPath = childPath(path, M3U8_PATH);
                 String m3u8Str = responseBody.string();
                 if (!saveFile("video.m3u8", childPath, m3u8Str)) {
                   emitter.onError(new Exception("can not write m3u8 file"));

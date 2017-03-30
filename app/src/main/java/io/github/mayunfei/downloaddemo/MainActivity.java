@@ -176,8 +176,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //    });
 
     RxDownloadManager.getInstance()
-        .addDownloadTask("m3u8",
+        .addDownloadTask("m3u80",
             "https://md.dongaocloud.com/2b4f/2b52/5b3/81e/61e08244fcd53892b90031ee873de2b2/video.m3u8",
+            "http://www.jianshu.com/p/94c433057440")
+        .subscribe(new Consumer<Object>() {
+          @Override public void accept(@NonNull Object o) throws Exception {
+            L.i("开始下载");
+          }
+        }, new Consumer<Throwable>() {
+          @Override public void accept(@NonNull Throwable throwable) throws Exception {
+            L.e(TAG, throwable.toString());
+          }
+        });
+    RxDownloadManager.getInstance()
+        .addDownloadTask("m3u81",
+            "https://md.dongaocloud.com/2b50/2b91/713/82b/b4c2f6282aabdcf936c15871fcc47d3b/video.m3u8",
             "http://www.jianshu.com/p/94c433057440")
         .subscribe(new Consumer<Object>() {
           @Override public void accept(@NonNull Object o) throws Exception {

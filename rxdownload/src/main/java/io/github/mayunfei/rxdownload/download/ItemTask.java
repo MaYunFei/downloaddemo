@@ -26,6 +26,7 @@ import okio.BufferedSource;
 import okio.Okio;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+import retrofit2.HttpException;
 import retrofit2.Response;
 
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
@@ -115,7 +116,8 @@ public class ItemTask {
             downloadBean.setTotalSize(downloadEvent.getTotalSize());
             downloadDB.updateDownloadBean(downloadBean);
           }
-        }).doOnComplete(new Action() {
+        })
+        .doOnComplete(new Action() {
           @Override public void run() throws Exception {
             downloadDB.setBeanFinished(downloadBean.getId());
           }
@@ -128,8 +130,12 @@ public class ItemTask {
   private Publisher<DownloadEvent> save(final DownloadBean bean,
       final Response<ResponseBody> response) {
     return Flowable.create(new FlowableOnSubscribe<DownloadEvent>() {
-      @Override public void subscribe(FlowableEmitter<DownloadEvent> e) throws Exception {
-        saveFile(e, response, bean.getPath(), bean.getFileName());
+      @Override public void subscribe(FlowableEmitter<DownloadEvent> emitter) throws Exception {
+        if (bean.isFinished()) { //优先级是 low 的重试之后会设置为finished
+          emitter.onComplete();
+        } else {
+          saveFile(emitter, response, bean.getPath(), bean.getFileName());
+        }
       }
     }, BackpressureStrategy.LATEST)
         //重试
@@ -141,13 +147,16 @@ public class ItemTask {
    */
   private void saveFile(FlowableEmitter<DownloadEvent> emitter, Response<ResponseBody> response,
       String path, String name) {
+    if (!response.isSuccessful()) {
+      emitter.onError(new HttpException(response));
+      return;
+    }
     BufferedSink sink = null;
     BufferedSource source = null;
     try {
       DownloadEvent downloadEvent = new DownloadEvent();
       ResponseBody body = response.body();
       downloadEvent.setTotalSize(body.contentLength());
-      L.i("fileeeeeeeeeeeeeeeeeee", name + "   " + downloadEvent.getTotalSize());
       File file = new File(path, name);
       sink = Okio.buffer(Okio.sink(file));
       long totalRead = 0;

@@ -54,50 +54,51 @@ public class RxUtils {
    */
   private static boolean retry(DownloadBean downloadBean, IDownloadDB downloadDB, Integer count,
       Throwable throwable) {
-    L.i("重试中.. " + count);
+    L.i("重试中.. " + count + " throwable = " +throwable);
     if (throwable instanceof ProtocolException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else if (throwable instanceof UnknownHostException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else if (throwable instanceof HttpException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else if (throwable instanceof SocketTimeoutException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else if (throwable instanceof ConnectException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else if (throwable instanceof SocketException) {
       if (count < RETRY_COUNT + 1) {
         return true;
       }
-      if (downloadBean.getPriority() == DownloadBean.PRIORITY_LOW) {
-        downloadBean.setCompletedSize(1);
-        downloadBean.setTotalSize(1);
-        downloadDB.updateDownloadBean(downloadBean);
-      }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     } else {
-      if (downloadBean.getPriority() == DownloadBean.PRIORITY_LOW) {
-        downloadBean.setCompletedSize(1);
-        downloadBean.setTotalSize(1);
-        downloadDB.updateDownloadBean(downloadBean);
-      }
-      return false;
+      return updateFinished(downloadBean, downloadDB);
     }
+  }
+
+  private static boolean updateFinished(DownloadBean downloadBean, IDownloadDB downloadDB) {
+    if (downloadBean.getPriority() == DownloadBean.PRIORITY_LOW) {
+      downloadBean.setCompletedSize(1);
+      downloadBean.setTotalSize(1);
+      downloadBean.setFinished(true);
+      downloadDB.updateDownloadBean(downloadBean);
+      return true;
+    }
+    return false;
   }
 
   public static FlowableProcessor<DownloadEvent> createProcessor(String key,

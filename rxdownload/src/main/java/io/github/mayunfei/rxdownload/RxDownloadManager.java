@@ -53,7 +53,7 @@ public class RxDownloadManager {
 
     //return Observable.merge(ParserUtils.m3u8Paser(downloadApi, m3u8, defPath),
     //    ParserUtils.htmlPaser(downloadApi, html, defPath))
-        return ParserUtils.htmlPaser(downloadApi,html,defPath)
+        return ParserUtils.m3u8Paser(downloadApi,m3u8,defPath+File.separator+key)
         .toList()
         .toObservable()
         .flatMap(new Function<List<DownloadBean>, ObservableSource<?>>() {
