@@ -83,7 +83,7 @@ public class DownloadService extends Service {
 
     if (intent != null) {
       int maxDownloadNumber = intent.getIntExtra(INTENT_KEY, 5);
-      semaphore = new Semaphore(10);
+      semaphore = new Semaphore(maxDownloadNumber);
     }
     return super.onStartCommand(intent, flags, startId);
   }
@@ -192,6 +192,9 @@ public class DownloadService extends Service {
     });
   }
 
+  /**
+   * 暂停所有
+   */
   public void pauseAll() {
     for (DownloadTask task : taskMap.values()) {
       task.pause();

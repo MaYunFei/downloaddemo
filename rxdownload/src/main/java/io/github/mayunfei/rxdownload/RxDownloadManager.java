@@ -31,6 +31,9 @@ import retrofit2.Retrofit;
  */
 
 public class RxDownloadManager {
+
+  public static final int MAX_DOWNLOAD_COUNT = 5;
+
   private ServiceHelper serviceHelper;
   private DownloadApi downloadApi;
   private String defPath = FileUtils.getDefaultFilePath();

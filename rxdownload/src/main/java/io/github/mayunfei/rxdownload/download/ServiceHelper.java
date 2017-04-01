@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import io.github.mayunfei.rxdownload.RxDownloadManager;
 import io.github.mayunfei.rxdownload.entity.DownloadBundle;
 import io.github.mayunfei.rxdownload.entity.DownloadEvent;
 import io.reactivex.Observable;
@@ -25,7 +26,6 @@ import java.util.concurrent.Semaphore;
 public class ServiceHelper {
   private static final Object object = new Object();
   private volatile static boolean bound = false;
-  private int maxDownloadNumber = 2;
   private Context context;
   //信号量  用于绑定service
   private Semaphore semaphore;
@@ -87,7 +87,7 @@ public class ServiceHelper {
    */
   private void startBindServiceAndDo(final ServiceConnectedCallback callback) {
     Intent intent = new Intent(context, DownloadService.class);
-    intent.putExtra(DownloadService.INTENT_KEY, maxDownloadNumber);
+    intent.putExtra(DownloadService.INTENT_KEY, RxDownloadManager.MAX_DOWNLOAD_COUNT);
     context.startService(intent);
     context.bindService(intent, new ServiceConnection() {
       @Override public void onServiceConnected(ComponentName name, IBinder binder) {

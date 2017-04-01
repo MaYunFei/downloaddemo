@@ -36,6 +36,11 @@ public interface IDownloadDB {
 
   List<DownloadBundle> getAllDownloadBundle();
 
+  /**
+   * 根据条件查找下载，一般用户名
+   */
+  List<DownloadBundle> getDownloadBundleByWhere(String where);
+
   void pauseAll();
 
   DownloadBundle getDownloadBundle(String key);

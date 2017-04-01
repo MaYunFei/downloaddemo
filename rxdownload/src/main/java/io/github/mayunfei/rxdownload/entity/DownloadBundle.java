@@ -31,6 +31,10 @@ public class DownloadBundle {
   public static final String ARGS2 = "args2";
   public static final String ARGS3 = "args3";
 
+  public static final String WHERE0 = "where0";
+  public static final String WHERE1 = "where1";
+
+
   public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
       + " ("
@@ -52,6 +56,10 @@ public class DownloadBundle {
       + " TEXT,"
       + ARGS3
       + " TEXT,"
+      + WHERE0
+      + " TEXT,"
+      + WHERE1
+      + " TEXT,"
       + TYPE
       + " INTEGER"
       + ")";
@@ -67,6 +75,8 @@ public class DownloadBundle {
     contentValues.put(ARGS1, downloadBundle.getArgs1());
     contentValues.put(ARGS2, downloadBundle.getArgs2());
     contentValues.put(ARGS3, downloadBundle.getArgs3());
+    contentValues.put(WHERE0, downloadBundle.getWhere0());
+    contentValues.put(WHERE1, downloadBundle.getWhere1());
     return contentValues;
   }
 
@@ -77,10 +87,12 @@ public class DownloadBundle {
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     int status = DBHelper.getInt(cursor, STATUS);
     int type = DBHelper.getInt(cursor, TYPE);
-    String arg0 = DBHelper.getString(cursor,ARGS0);
-    String arg1 = DBHelper.getString(cursor,ARGS1);
-    String arg2 = DBHelper.getString(cursor,ARGS2);
-    String arg3 = DBHelper.getString(cursor,ARGS3);
+    String arg0 = DBHelper.getString(cursor, ARGS0);
+    String arg1 = DBHelper.getString(cursor, ARGS1);
+    String arg2 = DBHelper.getString(cursor, ARGS2);
+    String arg3 = DBHelper.getString(cursor, ARGS3);
+    String where0 = DBHelper.getString(cursor, WHERE0);
+    String where1 = DBHelper.getString(cursor, WHERE1);
     DownloadBundle downloadBundle = new DownloadBundle();
     downloadBundle.setId(id);
     downloadBundle.setKey(key);
@@ -92,6 +104,8 @@ public class DownloadBundle {
     downloadBundle.setArgs0(arg1);
     downloadBundle.setArgs0(arg2);
     downloadBundle.setArgs0(arg3);
+    downloadBundle.setWhere0(where0);
+    downloadBundle.setWhere1(where1);
     return downloadBundle;
   }
 
@@ -117,6 +131,8 @@ public class DownloadBundle {
   private String args1;
   private String args2;
   private String args3;
+  private String where0;
+  private String where1;
   private List<DownloadBean> downloadList;
 
   public int getId() {
@@ -197,6 +213,22 @@ public class DownloadBundle {
 
   public void setArgs3(String args3) {
     this.args3 = args3;
+  }
+
+  public String getWhere0() {
+    return where0;
+  }
+
+  public void setWhere0(String where0) {
+    this.where0 = where0;
+  }
+
+  public String getWhere1() {
+    return where1;
+  }
+
+  public void setWhere1(String where1) {
+    this.where1 = where1;
   }
 
   public List<DownloadBean> getDownloadList() {

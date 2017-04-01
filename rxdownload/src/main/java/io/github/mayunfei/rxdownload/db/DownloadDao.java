@@ -87,6 +87,23 @@ public class DownloadDao implements IDownloadDB {
     return list;
   }
 
+  @Override public List<DownloadBundle> getDownloadBundleByWhere(String where) {
+
+    Cursor cursor = getReadableDatabase().rawQuery(
+        "SELECT * FROM " + DownloadBundle.TABLE_NAME + " WHERE " + DownloadBundle.WHERE0 + "=?",
+        new String[] { where });
+    ArrayList<DownloadBundle> list = new ArrayList<>(cursor.getCount());
+    try {
+      while (cursor.moveToNext()) {
+        DownloadBundle downloadBundle = DownloadBundle.getDownloadBundle(cursor);
+        list.add(downloadBundle);
+      }
+    } finally {
+      cursor.close();
+    }
+    return list;
+  }
+
   @Override public void pauseAll() {
 
     getWritableDatabase().update(DownloadBundle.TABLE_NAME,
