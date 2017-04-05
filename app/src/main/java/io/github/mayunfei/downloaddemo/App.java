@@ -1,8 +1,15 @@
 package io.github.mayunfei.downloaddemo;
 
 import android.app.Application;
+import android.text.TextUtils;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import io.github.mayunfei.rxdownload.RxDownloadManager;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import java.util.List;
 import retrofit2.Retrofit;
 
 /**
@@ -12,9 +19,13 @@ import retrofit2.Retrofit;
 public class App extends Application {
   @Override public void onCreate() {
     super.onCreate();
-    RxDownloadManager.getInstance()
-        .init(this, new Retrofit.Builder().baseUrl("http://www.exam.com/")
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .build());
+    SpUtil.getPath(this).subscribe(new Consumer<String>() {
+      @Override public void accept(@NonNull String s) throws Exception {
+        RxDownloadManager.getInstance()
+            .init(App.this, new Retrofit.Builder().baseUrl("http://www.exam.com/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build(), s);
+      }
+    });
   }
 }

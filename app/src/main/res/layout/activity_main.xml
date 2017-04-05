@@ -39,4 +39,11 @@
       android:text="下载列表"
       />
 
+
+  <TextView
+      android:id="@+id/tv_sdcard"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:text="test"
+      />
 </LinearLayout>

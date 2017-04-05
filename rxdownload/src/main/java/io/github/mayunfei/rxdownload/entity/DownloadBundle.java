@@ -3,7 +3,6 @@ package io.github.mayunfei.rxdownload.entity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import io.github.mayunfei.rxdownload.db.DBHelper;
-import java.security.Key;
 import java.util.List;
 
 import static io.github.mayunfei.rxdownload.entity.DownloadStatus.DOWNLOADING;
@@ -21,6 +20,7 @@ public class DownloadBundle {
   public static final String TABLE_NAME = "DownloadBundle";
   public static final String ID = "id";
   public static final String KEY = "key";
+  public static final String PATH = "path";
   public static final String TOTAL_SIZE = "totalSize";
   public static final String COMPLETED_SIZE = "completedSize";
   public static final String STATUS = "status";
@@ -30,10 +30,8 @@ public class DownloadBundle {
   public static final String ARGS1 = "args1";
   public static final String ARGS2 = "args2";
   public static final String ARGS3 = "args3";
-
   public static final String WHERE0 = "where0";
   public static final String WHERE1 = "where1";
-
 
   public static final String CREATE_TABLE = "CREATE TABLE "
       + TABLE_NAME
@@ -41,6 +39,8 @@ public class DownloadBundle {
       + ID
       + " INTEGER PRIMARY KEY AUTOINCREMENT,"
       + KEY
+      + " TEXT NOT NULL,"
+      + PATH
       + " TEXT NOT NULL,"
       + TOTAL_SIZE
       + " LONG,"
@@ -66,23 +66,25 @@ public class DownloadBundle {
 
   public static ContentValues insert(DownloadBundle downloadBundle) {
     ContentValues contentValues = new ContentValues();
-    contentValues.put(KEY, downloadBundle.getKey());
-    contentValues.put(TOTAL_SIZE, downloadBundle.getTotalSize());
-    contentValues.put(COMPLETED_SIZE, downloadBundle.getCompletedSize());
-    contentValues.put(STATUS, downloadBundle.getStatus());
-    contentValues.put(TYPE, downloadBundle.getType());
-    contentValues.put(ARGS0, downloadBundle.getArgs0());
-    contentValues.put(ARGS1, downloadBundle.getArgs1());
-    contentValues.put(ARGS2, downloadBundle.getArgs2());
-    contentValues.put(ARGS3, downloadBundle.getArgs3());
-    contentValues.put(WHERE0, downloadBundle.getWhere0());
-    contentValues.put(WHERE1, downloadBundle.getWhere1());
+    contentValues.put(KEY, downloadBundle.key);
+    contentValues.put(PATH, downloadBundle.path);
+    contentValues.put(TOTAL_SIZE, downloadBundle.totalSize);
+    contentValues.put(COMPLETED_SIZE, downloadBundle.completedSize);
+    contentValues.put(STATUS, downloadBundle.status);
+    contentValues.put(TYPE, downloadBundle.type);
+    contentValues.put(ARGS0, downloadBundle.args0);
+    contentValues.put(ARGS1, downloadBundle.args1);
+    contentValues.put(ARGS2, downloadBundle.args2);
+    contentValues.put(ARGS3, downloadBundle.args3);
+    contentValues.put(WHERE0, downloadBundle.where0);
+    contentValues.put(WHERE1, downloadBundle.where0);
     return contentValues;
   }
 
   public static DownloadBundle getDownloadBundle(Cursor cursor) {
     int id = DBHelper.getInt(cursor, ID);
     String key = DBHelper.getString(cursor, KEY);
+    String path = DBHelper.getString(cursor, PATH);
     long totalSize = DBHelper.getLong(cursor, TOTAL_SIZE);
     long completedSize = DBHelper.getLong(cursor, COMPLETED_SIZE);
     int status = DBHelper.getInt(cursor, STATUS);
@@ -96,6 +98,7 @@ public class DownloadBundle {
     DownloadBundle downloadBundle = new DownloadBundle();
     downloadBundle.setId(id);
     downloadBundle.setKey(key);
+    downloadBundle.setPath(path);
     downloadBundle.setTotalSize(totalSize);
     downloadBundle.setCompletedSize(completedSize);
     downloadBundle.setStatus(status);
@@ -123,6 +126,7 @@ public class DownloadBundle {
 
   private int id;
   private String key;
+  private String path;
   private long totalSize;
   private long completedSize;
   private int status;
@@ -149,6 +153,14 @@ public class DownloadBundle {
 
   public void setKey(String key) {
     this.key = key;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
   }
 
   public long getTotalSize() {
@@ -261,7 +273,9 @@ public class DownloadBundle {
     return "DownloadBundle{"
         + "id = "
         + id
-        + " "
+        + ", path ="
+        + path
+        + ", key="
         + key
         + '\''
         + ", totalSize="
@@ -276,9 +290,10 @@ public class DownloadBundle {
   }
 
   public void init(DownloadBundle oldBundle) {
-    this.setId(oldBundle.getId());
-    this.setDownloadList(oldBundle.getDownloadList());
-    this.setTotalSize(oldBundle.getTotalSize());
-    this.setCompletedSize(oldBundle.getCompletedSize());
+    this.setId(oldBundle.id);
+    this.setPath(oldBundle.path);
+    this.setDownloadList(oldBundle.downloadList);
+    this.setTotalSize(oldBundle.totalSize);
+    this.setCompletedSize(oldBundle.completedSize);
   }
 }

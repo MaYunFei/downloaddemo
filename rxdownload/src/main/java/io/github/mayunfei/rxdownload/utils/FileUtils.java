@@ -12,18 +12,18 @@ public class FileUtils {
   private FileUtils() {
   }
 
-  public static String getDefaultFilePath() {
-    String filePath =
-        Environment.getExternalStorageDirectory().getAbsolutePath() + "/yunfei/download/";
-    File file = new File(filePath);
-    if (!file.exists()) {
-      boolean createDir = file.mkdirs();
-      if (createDir) {
-        L.i("create file success");
-      }
-    }
-    return filePath;
-  }
+  //public static String getDefaultFilePath() {
+  //  String filePath =
+  //      Environment.getExternalStorageDirectory().getAbsolutePath() + "/yunfei/download/";
+  //  File file = new File(filePath);
+  //  if (!file.exists()) {
+  //    boolean createDir = file.mkdirs();
+  //    if (createDir) {
+  //      L.i("create file success");
+  //    }
+  //  }
+  //  return filePath;
+  //}
 
   public static String getFilePath(String path) {
     File file = new File(path);
